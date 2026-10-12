@@ -569,8 +569,11 @@ export default async function DealershipPage({ params, searchParams }: { params:
                   </>
                 )}
               </form>
-                <div id="sales" className="space-y-2 border-t border-line p-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Sales log</div>
+                <div id="sales" className="m-3 space-y-2.5 rounded-md border-2 p-3" style={{ borderColor: "var(--color-blue)", background: "linear-gradient(180deg, #10224a 0%, #0a1226 100%)", boxShadow: "0 0 0 1px rgba(125,211,252,0.25), 0 0 28px rgba(59,130,246,0.28)" }}>
+                  <div className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.12em] text-blue-light">
+                    <span aria-hidden className="status-dot-live inline-block h-2 w-2 rounded-full bg-blue" />
+                    Sales log · log every call here
+                  </div>
                   {canOperate ? (
                     <form action={logSalesTouch} className="space-y-2">
                       {hidden}
@@ -578,7 +581,7 @@ export default async function DealershipPage({ params, searchParams }: { params:
                       <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
                       <div className="flex flex-wrap gap-1.5">
                         {SALES_OUTCOMES.map((o) => (
-                          <button key={o} className={`btn btn-sm ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
+                          <button key={o} className={`btn font-semibold ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
                             {SALES_OUTCOME_LABEL[o]}
                           </button>
                         ))}
