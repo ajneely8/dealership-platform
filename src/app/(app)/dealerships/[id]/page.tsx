@@ -353,6 +353,42 @@ export default async function DealershipPage({ params, searchParams }: { params:
         </div>
       </Panel>
 
+      {/* ---- What a person did with this dealership ---- */}
+      <Panel title="Sales log" id="sales" className="mb-4">
+        {canOperate ? (
+          <form action={logSalesTouch} className="space-y-2 border-b border-line p-3">
+            {hidden}
+            <input type="hidden" name="dealershipId" value={id} />
+            <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
+            <div className="flex flex-wrap gap-1.5">
+              {SALES_OUTCOMES.map((o) => (
+                <button key={o} className={`btn btn-sm ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
+                  {SALES_OUTCOME_LABEL[o]}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11.5px] text-faint">One click logs the outcome with the note, moves the pipeline stage, and shows on every list.</p>
+          </form>
+        ) : null}
+        {touches.length === 0 ? (
+          <Empty>Nobody has worked this dealership yet.</Empty>
+        ) : (
+          <ul>
+            {touches.map((t) => (
+              <li key={t.id} className="border-b border-line-soft px-3 py-2 text-[13px] last:border-b-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <SalesStatusBadge status={t.outcome} at={null} />
+                  <span className="text-[11.5px] text-faint">
+                    {t.by} · {fmtDate(t.createdAt, true)}
+                  </span>
+                </div>
+                {t.note ? <div className="mt-1 whitespace-pre-wrap">{t.note}</div> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+
       <div className="mb-4">
         {/* ---- Interactions ---- */}
         <Panel title="Live lead test" id="interactions">
@@ -1114,41 +1150,6 @@ export default async function DealershipPage({ params, searchParams }: { params:
 
         {/* ================= Right column ================= */}
         <div className="space-y-4">
-          <Panel title="Sales log" id="sales">
-            {canOperate ? (
-              <form action={logSalesTouch} className="space-y-2 border-b border-line p-3">
-                {hidden}
-                <input type="hidden" name="dealershipId" value={id} />
-                <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
-                <div className="flex flex-wrap gap-1.5">
-                  {SALES_OUTCOMES.map((o) => (
-                    <button key={o} className={`btn btn-sm ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
-                      {SALES_OUTCOME_LABEL[o]}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[11.5px] text-faint">One click logs the outcome with the note, moves the pipeline stage, and shows on every list.</p>
-              </form>
-            ) : null}
-            {touches.length === 0 ? (
-              <Empty>Nobody has worked this dealership yet.</Empty>
-            ) : (
-              <ul>
-                {touches.map((t) => (
-                  <li key={t.id} className="border-b border-line-soft px-3 py-2 text-[13px] last:border-b-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <SalesStatusBadge status={t.outcome} at={null} />
-                      <span className="text-[11.5px] text-faint">
-                        {t.by} · {fmtDate(t.createdAt, true)}
-                      </span>
-                    </div>
-                    {t.note ? <div className="mt-1 whitespace-pre-wrap">{t.note}</div> : null}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-
           <Panel title="Pipeline & next action">
             <form action={setPipeline} className="space-y-2 p-3">
               {hidden}

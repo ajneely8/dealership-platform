@@ -38,11 +38,11 @@ export default async function DealershipsPage({ searchParams }: { searchParams: 
                   <tr>
                     <th>Priority</th>
                     <th>Dealership</th>
+                    <th>Sales</th>
                     <th>Group</th>
                     <th>Location</th>
                     <th>Chatbot · AI receptionist · Lead follow-up</th>
                     <th className="text-right">Inventory</th>
-                    <th>Sales</th>
                     <th>Last checked</th>
                   </tr>
                 </thead>
@@ -60,15 +60,15 @@ export default async function DealershipsPage({ searchParams }: { searchParams: 
                           {d.paused ? <Badge tone="warn">Paused</Badge> : null}
                         </div>
                       </td>
+                      <td className="min-w-[150px]">
+                        <SalesStatusBadge status={d.salesStatus} at={d.lastTouchAt} />
+                      </td>
                       <td>{d.groupId ? <A href={`/groups/${d.groupId}`}>{d.groupName}</A> : <span className="text-faint">—</span>}</td>
                       <td>{[d.city, d.state].filter(Boolean).join(", ") || "—"}</td>
                       <td className="min-w-[320px]">
                         <CheckRow checks={d.checks} />
                       </td>
                       <td className="num text-right">{d.inventoryCount ?? "—"}</td>
-                      <td className="min-w-[150px]">
-                        <SalesStatusBadge status={d.salesStatus} at={d.lastTouchAt} />
-                      </td>
                       <td className="whitespace-nowrap text-[12px] text-muted">{fmtDate(d.lastChecked)}</td>
                     </tr>
                   ))}
