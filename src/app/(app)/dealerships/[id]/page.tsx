@@ -353,41 +353,6 @@ export default async function DealershipPage({ params, searchParams }: { params:
         </div>
       </Panel>
 
-      {/* ---- What a person did with this dealership ---- */}
-      <Panel title="Sales log" id="sales" className="mb-4">
-        {canOperate ? (
-          <form action={logSalesTouch} className="space-y-2 border-b border-line p-3">
-            {hidden}
-            <input type="hidden" name="dealershipId" value={id} />
-            <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
-            <div className="flex flex-wrap gap-1.5">
-              {SALES_OUTCOMES.map((o) => (
-                <button key={o} className={`btn btn-sm ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
-                  {SALES_OUTCOME_LABEL[o]}
-                </button>
-              ))}
-            </div>
-            <p className="text-[11.5px] text-faint">One click logs the outcome with the note, moves the pipeline stage, and shows on every list.</p>
-          </form>
-        ) : null}
-        {touches.length === 0 ? (
-          <Empty>Nobody has worked this dealership yet.</Empty>
-        ) : (
-          <ul>
-            {touches.map((t) => (
-              <li key={t.id} className="border-b border-line-soft px-3 py-2 text-[13px] last:border-b-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <SalesStatusBadge status={t.outcome} at={null} />
-                  <span className="text-[11.5px] text-faint">
-                    {t.by} · {fmtDate(t.createdAt, true)}
-                  </span>
-                </div>
-                {t.note ? <div className="mt-1 whitespace-pre-wrap">{t.note}</div> : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
 
       <div className="mb-4">
         {/* ---- Interactions ---- */}
@@ -569,7 +534,8 @@ export default async function DealershipPage({ params, searchParams }: { params:
                   </>
                 )}
               </form>
-              <form action={requestChatTest} className="space-y-2 bg-surface p-3">
+              <div className="bg-surface">
+              <form action={requestChatTest} className="space-y-2 p-3">
                 {hidden}
                 <input type="hidden" name="dealershipId" value={id} />
                 <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Request an automated chat test</div>
@@ -603,6 +569,42 @@ export default async function DealershipPage({ params, searchParams }: { params:
                   </>
                 )}
               </form>
+                <div id="sales" className="space-y-2 border-t border-line p-3">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Sales log</div>
+                  {canOperate ? (
+                    <form action={logSalesTouch} className="space-y-2">
+                      {hidden}
+                      <input type="hidden" name="dealershipId" value={id} />
+                      <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
+                      <div className="flex flex-wrap gap-1.5">
+                        {SALES_OUTCOMES.map((o) => (
+                          <button key={o} className={`btn btn-sm ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
+                            {SALES_OUTCOME_LABEL[o]}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[11.5px] text-faint">One click logs the outcome with the note, moves the pipeline stage, and shows on every list.</p>
+                    </form>
+                  ) : null}
+                  {touches.length === 0 ? (
+                    <p className="text-[12.5px] text-muted">Nobody has worked this dealership yet.</p>
+                  ) : (
+                    <ul className="-mx-3 border-t border-line">
+                      {touches.map((t) => (
+                        <li key={t.id} className="border-b border-line-soft px-3 py-2 text-[13px] last:border-b-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <SalesStatusBadge status={t.outcome} at={null} />
+                            <span className="text-[11.5px] text-faint">
+                              {t.by} · {fmtDate(t.createdAt, true)}
+                            </span>
+                          </div>
+                          {t.note ? <div className="mt-1 whitespace-pre-wrap">{t.note}</div> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                          </div>
+              </div>
               <form action={logChatTest} encType="multipart/form-data" className="space-y-2 bg-surface p-3">
                 {hidden}
                 <input type="hidden" name="dealershipId" value={id} />
