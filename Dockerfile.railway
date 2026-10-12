@@ -1,0 +1,32 @@
+# One container for Railway (or any host that runs a single long-lived service):
+# the dashboard, the agents (BullMQ workers + scheduler) and Chromium for Playwright, together.
+# Postgres and Redis are attached services; evidence lives on a mounted volume (STORAGE_DRIVER=local).
+#
+# The Playwright base image ships the browser and its system libraries. Keep the tag in step
+# with the "playwright" version in package.json.
+FROM mcr.microsoft.com/playwright:v1.63.0-noble AS base
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev
+
+FROM deps AS build
+COPY . .
+# The build must not need live services; the pages read the database at request time.
+RUN npm run build
+
+FROM base AS runtime
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/package.json /app/next.config.ts /app/tsconfig.json /app/drizzle.config.ts ./
+COPY --from=build /app/drizzle ./drizzle
+COPY --from=build /app/src ./src
+COPY --from=build /app/scripts ./scripts
+# The evidence volume mounts here; the start script creates the folder and makes it writable.
+RUN mkdir -p /data && chown -R pwuser:pwuser /data /app
+USER pwuser
+EXPOSE 5310
+CMD ["node", "scripts/start-all.mjs"]
