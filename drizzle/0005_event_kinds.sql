@@ -1,0 +1,1 @@
+ALTER TABLE "agent_events" ADD COLUMN "kind" text DEFAULT 'task.step.completed' NOT NULL;

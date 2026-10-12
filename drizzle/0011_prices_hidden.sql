@@ -1,0 +1,2 @@
+ALTER TABLE "inventory_snapshots" ADD COLUMN "prices_hidden" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "dealerships" ADD COLUMN "est_prices_hidden" boolean DEFAULT false NOT NULL;
