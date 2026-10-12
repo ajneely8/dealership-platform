@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, count, eq, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { dealerships, prospects } from "@/db/schema";
 import { dedupeKeys, findDuplicateInDb } from "@/domain/dedupe";
@@ -522,25 +522,5 @@ export async function demoteIfUnresearchable(dealershipId: string, scanResult: s
   return true;
 }
 
-/** Figures for the Prospecting page and the command strip. */
-export async function prospectStats(now = new Date()) {
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-  const rows = await db().select({ status: prospects.status, n: count() }).from(prospects).where(or(isNull(prospects.screenedAt), sql`${prospects.screenedAt} >= ${startOfDay}`)).groupBy(prospects.status);
-  const get = (s: string) => Number(rows.find((r) => r.status === s)?.n ?? 0);
-  return { pool: get("NEW"), screening: get("SCREENING"), admittedToday: get("ADMITTED"), rejectedToday: get("REJECTED") };
-}
-
-export async function recentProspects(limit = 60) {
-  return db()
-    .select({ p: prospects, dealershipName: dealerships.name })
-    .from(prospects)
-    .leftJoin(dealerships, eq(dealerships.id, prospects.dealershipId))
-    .where(inArray(prospects.status, ["SCREENING", "ADMITTED", "REJECTED"]))
-    .orderBy(desc(prospects.screenedAt), desc(prospects.createdAt))
-    .limit(limit);
-}
-
-export async function candidatePool(limit = 30) {
-  return db().select().from(prospects).where(and(eq(prospects.status, "NEW"))).orderBy(sql`${prospects.distanceKm} asc nulls last`).limit(limit);
-}
+// Read-only views (stats, recent, pool) live in lib/prospect-data so pages never load this module.
+export { candidatePool, prospectStats, recentProspects } from "@/lib/prospect-data";

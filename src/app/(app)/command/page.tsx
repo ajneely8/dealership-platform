@@ -6,7 +6,7 @@ import { A, MetricStrip, PageHeader, Panel } from "@/components/ui";
 import { describeWindow, isWithinWindow } from "@/domain/research-window";
 import { agentEventsFor, allAgentsLive, commandMetrics, toFeed, toSnapshot } from "@/lib/agent-state";
 import { getSettings } from "@/lib/settings";
-import { prospectStats } from "@/workers/prospect";
+import { prospectStats } from "@/lib/prospect-data";
 import { queuesAvailable } from "@/queue";
 import { currentRelay, RELAY_STAGES } from "@/workers/relay";
 import { AGENTS } from "@/domain/agents";

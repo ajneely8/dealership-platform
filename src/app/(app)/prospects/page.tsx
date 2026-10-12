@@ -3,7 +3,7 @@ import { AgentStreamProvider } from "@/components/agents/stream";
 import { A, Badge, Empty, PageHeader, Panel, fmtDate } from "@/components/ui";
 import { agentEventsFor, allAgentsLive, toFeed, toSnapshot } from "@/lib/agent-state";
 import { getSettings } from "@/lib/settings";
-import { candidatePool, prospectStats, recentProspects } from "@/workers/prospect";
+import { candidatePool, prospectStats, recentProspects } from "@/lib/prospect-data";
 import { currentRelay, RELAY_STAGES } from "@/workers/relay";
 import { AGENTS } from "@/domain/agents";
 
