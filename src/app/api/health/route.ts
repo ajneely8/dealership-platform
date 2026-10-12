@@ -11,7 +11,7 @@ export async function GET() {
     checks.database = true;
   } catch (err) {
     // The reason, with any credential stripped, so a hosted deployment can be diagnosed from outside.
-    checks.databaseError = (err instanceof Error ? err.message : String(err)).replace(///[^@s]+@/g, "//<redacted>@").slice(0, 200);
+    checks.databaseError = (err instanceof Error ? err.message : String(err)).replace(/\/\/[^@\s]+@/g, "//<redacted>@").slice(0, 200);
   }
   if (queuesAvailable()) {
     try {
