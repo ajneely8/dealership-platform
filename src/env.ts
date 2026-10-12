@@ -18,7 +18,8 @@ const schema = z.object({
   APP_URL: z.string().url().default("http://localhost:5310"),
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
   DATABASE_URL: z.string().min(1),
-  REDIS_URL: z.string().min(1),
+  /** Empty in the hosted viewer (Vercel): no queue, no workers; the research data is read as synced. */
+  REDIS_URL: z.string().default(""),
 
   ADMIN_EMAIL: z.string().email().optional().or(z.literal("")),
   ADMIN_PASSWORD: z.string().optional(),

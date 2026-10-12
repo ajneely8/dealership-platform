@@ -36,7 +36,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroySession, requireRole } from "@/lib/auth/session";
 import { nameFromDomain, normalizeName, normalizePhone, normalizeWebsite } from "@/lib/normalize";
 import { getSettings, settingsSchema, updateSettings } from "@/lib/settings";
-import { enqueue, getQueue, redis, type JobPayloads } from "@/queue";
+import { enqueue, getQueue, redis, type JobPayloads, NO_QUEUE_REASON } from "@/queue";
 import { APPROVED_MESSAGES } from "@/domain/constants";
 import { createHash } from "node:crypto";
 
@@ -270,7 +270,7 @@ export async function queueJob(form: FormData) {
     const result = await enqueue(queue, { dealershipId, manual: true });
     await audit(user.email, "job.enqueued", "dealership", dealershipId, { queue, queued: result.queued });
     if (result.queued) await emit(`${queue} requested by ${user.email}`, { agent: "orion", dealershipId, status: "INFO", kind: "task.created" });
-    return result.queued ? QUEUE_NOTICE[queue] : "That is already running for this dealership.";
+    return result.queued ? QUEUE_NOTICE[queue] : (result.reason === NO_QUEUE_REASON ? NO_QUEUE_REASON : "That is already running for this dealership.");
   });
 }
 

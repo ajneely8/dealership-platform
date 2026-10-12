@@ -11,7 +11,7 @@ import { describeWindow, isWithinWindow, nextWindowStart } from "@/domain/resear
 import { hasRole, requireUser } from "@/lib/auth/session";
 import { getSettings } from "@/lib/settings";
 import { getQueue } from "@/queue";
-import { RESEARCH_QUEUES } from "@/workers/runner";
+import { RESEARCH_QUEUES } from "@/domain/constants";
 
 const AGENT: Record<QueueName, { name: string; does: string }> = {
   prospect: { name: "Prospecting", does: "Finds dealership candidates nearby and screens whether they can be researched" },

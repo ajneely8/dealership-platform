@@ -21,6 +21,15 @@ docker compose up --build
 
 `migrate` runs migrations and seeds the first admin, then `web` and `worker` start. Open http://localhost:5310.
 
+## Vercel (hosted viewer, free)
+
+Vercel cannot run the agents (no long-lived process, no Chromium, no Redis), so the Vercel build is the **viewer**: the dashboard, every dealership, its phone number, verdicts, estimates and briefs, read from a hosted Postgres that is synced from the research machine. The app switches to viewer mode by itself when `REDIS_URL` is empty: buttons that would start a job say so, the health check ignores Redis, and screenshots that live on the research machine show a labelled placeholder.
+
+1. Vercel → Add New → Project → import `ajneely8/dealership-platform`. Framework: Next.js (detected). `vercel.json` sets the install command so the local-dev Redis and browser downloads are skipped.
+2. Storage → Create Database → **Neon Postgres** (free). Connect it to the project; it sets `DATABASE_URL`.
+3. Environment variables: `SESSION_SECRET` (32+ random characters), `APP_URL` (the `.vercel.app` address), `NODE_ENV=production`, `STORAGE_DRIVER=local`. Leave `REDIS_URL` unset. `ANTHROPIC_API_KEY` is optional (agent questions). No Twilio needed.
+4. Deploy, then sync the data from the research machine: put the Neon connection string in the local `.env` as `TARGET_DATABASE_URL` and run `npm run sync-to-hosted` (`-- --dry` first to see the row counts). The sync applies the migrations on the target and copies every table with ON CONFLICT DO NOTHING, so it can be run again whenever there is new research. Users are copied too, so the local login works on the viewer.
+
 ## Railway (one container, recommended for a first hosted run)
 
 `Dockerfile.railway` builds one image with the dashboard, the agents and Chromium; `scripts/start-all.mjs` applies migrations, seeds the first admin and runs both processes. `railway.json` points Railway at that Dockerfile and at `/api/health`.

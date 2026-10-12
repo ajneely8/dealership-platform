@@ -7,6 +7,7 @@ import { describeWindow, isWithinWindow } from "@/domain/research-window";
 import { agentEventsFor, allAgentsLive, commandMetrics, toFeed, toSnapshot } from "@/lib/agent-state";
 import { getSettings } from "@/lib/settings";
 import { prospectStats } from "@/workers/prospect";
+import { queuesAvailable } from "@/queue";
 import { currentRelay, RELAY_STAGES } from "@/workers/relay";
 import { AGENTS } from "@/domain/agents";
 
@@ -30,6 +31,11 @@ export default async function CommandCenterPage({ searchParams }: { searchParams
         </a>
       </PageHeader>
       <DemoBanner exitHref="/command" />
+      {!queuesAvailable() ? (
+        <div role="status" className="mb-4 border-l-2 border-blue bg-[#0d1a33] px-3 py-2 text-[13px] text-text">
+          <span className="font-medium">Hosted viewer.</span> The agents run on the research machine; everything here is the research as of the last sync. Phone numbers, briefs, estimates and verdicts are live data; buttons that would start a job are off.
+        </div>
+      ) : null}
 
       {!demo ? (
         <MetricStrip

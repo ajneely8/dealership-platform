@@ -119,6 +119,10 @@ cp .env.example .env    # fill in the blanks; see ENVIRONMENT.md
 docker compose up --build
 ```
 
+## Hosted viewer on Vercel
+
+The agents need a long-lived machine; the dashboard does not. With `REDIS_URL` empty the app runs as a **hosted viewer** of the research data (Vercel + Neon Postgres, both free): every dealership, phone number, verdict, estimate and brief, synced up from the research machine with `npm run sync-to-hosted`. See DEPLOYMENT.md → Vercel.
+
 ## Keeping it running (always on)
 
 The dev preview only lives while a Claude session holds it. To keep the app up on its own, run once from this folder:

@@ -204,6 +204,9 @@ export const QUEUES = [
 ] as const;
 export type QueueName = (typeof QUEUES)[number];
 
+/** Queues whose jobs touch dealership websites or phones; these honour the daily research window. */
+export const RESEARCH_QUEUES: readonly QueueName[] = ["discovery", "website-scan", "inventory", "signals", "social", "interaction", "phone-check"];
+
 /** Pointer from a score reason / finding / brief claim to the stored record that supports it. */
 export type EvidenceRef = {
   type: "observation" | "interaction" | "response" | "signal" | "evidence" | "inventory" | "social" | "transcript";

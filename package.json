@@ -24,7 +24,8 @@
     "chat-diagnose": "node scripts/with-dev-env.mjs scripts/chat-diagnose.ts",
     "prospect-admin": "node scripts/with-dev-env.mjs scripts/prospect-admin.ts",
     "settings-admin": "node scripts/with-dev-env.mjs scripts/settings-admin.ts",
-    "phone-admin": "node scripts/with-dev-env.mjs scripts/phone-admin.ts"
+    "phone-admin": "node scripts/with-dev-env.mjs scripts/phone-admin.ts",
+    "sync-to-hosted": "node scripts/with-dev-env.mjs scripts/sync-to-hosted.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

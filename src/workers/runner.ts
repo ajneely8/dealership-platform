@@ -2,7 +2,7 @@ import { DelayedError, Worker, type Job } from "bullmq";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { dealerships, jobRuns } from "@/db/schema";
-import type { QueueName } from "@/domain/constants";
+import { RESEARCH_QUEUES, type QueueName } from "@/domain/constants";
 import { refreshGroupIntel } from "@/domain/group-intel";
 import { runScoring } from "@/domain/scoring/run";
 import { env } from "@/env";
@@ -121,8 +121,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string, onTimeou
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-/** Queues whose jobs touch dealership websites; these honour the daily research window. */
-export const RESEARCH_QUEUES: readonly QueueName[] = ["discovery", "website-scan", "inventory", "signals", "social", "interaction", "phone-check"];
+export { RESEARCH_QUEUES };
 
 /**
  * Wraps a handler with the job_runs record: start, finish, duration, status, error, retry count
