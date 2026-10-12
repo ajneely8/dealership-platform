@@ -5,12 +5,13 @@ import { queuesAvailable, redis } from "@/queue";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const checks: { database: boolean; redis: boolean | "not configured" } = { database: false, redis: queuesAvailable() ? false : "not configured" };
+  const checks: { database: boolean; redis: boolean | "not configured"; databaseError?: string } = { database: false, redis: queuesAvailable() ? false : "not configured" };
   try {
     await db().execute(sql`select 1`);
     checks.database = true;
-  } catch {
-    // reported below
+  } catch (err) {
+    // The reason, with any credential stripped, so a hosted deployment can be diagnosed from outside.
+    checks.databaseError = (err instanceof Error ? err.message : String(err)).replace(///[^@s]+@/g, "//<redacted>@").slice(0, 200);
   }
   if (queuesAvailable()) {
     try {
