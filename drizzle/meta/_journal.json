@@ -85,6 +85,13 @@
       "when": 1791611596068,
       "tag": "0011_prices_hidden",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791839387900,
+      "tag": "0012_sales_touches",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { boolean, doublePrecision, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import type { SalesOutcome } from "@/domain/constants";
 import type {
   Channel,
   Confidence,
@@ -190,6 +191,9 @@ export const dealerships = pgTable(
     estCommissionPerUnit: integer("est_commission_per_unit"),
     estSegment: text("est_segment"),
     estPricesHidden: boolean("est_prices_hidden").notNull().default(false),
+    /** Latest sales outcome logged by a person (see sales_touches) and when. */
+    salesStatus: text("sales_status").$type<SalesOutcome>(),
+    lastTouchAt: ts("last_touch_at"),
     pipelineStage: text("pipeline_stage").$type<PipelineStage>().notNull().default("RESEARCHING"),
     nextAction: text("next_action"),
     nextActionDue: ts("next_action_due"),
@@ -222,6 +226,20 @@ export const contacts = pgTable("contacts", {
   addedBy: text("added_by").notNull(),
   createdAt: createdAt(),
 });
+
+/** One entry per time a person worked the dealership: called, no answer, booked, sold… with a note. */
+export const salesTouches = pgTable(
+  "sales_touches",
+  {
+    id: id(),
+    dealershipId: uuid("dealership_id").notNull().references(() => dealerships.id, { onDelete: "cascade" }),
+    outcome: text("outcome").$type<SalesOutcome>().notNull(),
+    note: text("note"),
+    by: text("by").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("sales_touches_dealer_idx").on(t.dealershipId, t.createdAt)],
+);
 
 export const notes = pgTable("notes", {
   id: id(),

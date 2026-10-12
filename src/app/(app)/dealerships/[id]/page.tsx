@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import {
   addContact,
   addNote,
+  logSalesTouch,
   approveInteraction,
   cancelInteraction,
   createSignal,
@@ -50,7 +51,9 @@ import {
 import { CHANNELS, CONFIDENCE, MILESTONES, PIPELINE_STAGES, PRODUCTS, PRODUCT_LABEL, SIGNAL_TYPES, SUBMITTABLE_FORM_TYPES, SUPPRESSION_REASONS, type EvidenceRef } from "@/domain/constants";
 import { assessFit, deriveChecks } from "@/domain/checks";
 import { GROWTH_SIGNAL_TYPES, RECEPTIONIST_LABEL, RECEPTIONIST_STATUSES } from "@/domain/constants";
-import { CheckCards, FitBadge } from "@/components/checks";
+import { CheckCards, FitBadge, SalesStatusBadge } from "@/components/checks";
+import { SALES_OUTCOMES, SALES_OUTCOME_LABEL } from "@/domain/constants";
+import { salesTouches } from "@/db/schema";
 import { WorkStatus } from "@/components/work-status";
 import { checkEligibility } from "@/domain/eligibility";
 import { formatDuration } from "@/domain/response-timing";
@@ -108,7 +111,7 @@ export default async function DealershipPage({ params, searchParams }: { params:
   const back = `/dealerships/${id}`;
   const canOperate = hasRole(user, "OPERATOR");
 
-  const [group, allGroups, scoreRows, [brief], observations, inventory, interactions, signalRows, shots, profiles, social, noteRows, contactRows, history, identities, settings, [runningJob]] = await Promise.all([
+  const [group, allGroups, scoreRows, [brief], observations, inventory, interactions, signalRows, shots, profiles, social, noteRows, touches, contactRows, history, identities, settings, [runningJob]] = await Promise.all([
     d.groupId ? db().select().from(dealerGroups).where(eq(dealerGroups.id, d.groupId)).limit(1) : Promise.resolve([]),
     db().select({ id: dealerGroups.id, name: dealerGroups.name }).from(dealerGroups).orderBy(dealerGroups.name),
     db().select().from(scores).where(eq(scores.dealershipId, id)),
@@ -121,6 +124,7 @@ export default async function DealershipPage({ params, searchParams }: { params:
     db().select().from(socialProfiles).where(eq(socialProfiles.dealershipId, id)),
     db().select().from(socialObservations).where(eq(socialObservations.dealershipId, id)).orderBy(desc(socialObservations.observedAt)).limit(10),
     db().select().from(notes).where(eq(notes.dealershipId, id)).orderBy(desc(notes.createdAt)).limit(20),
+    db().select().from(salesTouches).where(eq(salesTouches.dealershipId, id)).orderBy(desc(salesTouches.createdAt)).limit(30),
     db().select().from(contacts).where(eq(contacts.dealershipId, id)).orderBy(contacts.name),
     db().select().from(scoreHistory).where(eq(scoreHistory.dealershipId, id)).orderBy(desc(scoreHistory.changedAt)).limit(30),
     db().select().from(testIdentities).where(eq(testIdentities.active, true)).orderBy(testIdentities.name),
@@ -201,12 +205,19 @@ export default async function DealershipPage({ params, searchParams }: { params:
             {group[0] ? <A href={`/groups/${group[0].id}`}>{group[0].name}</A> : <span>Independent / no group on file</span>}
             <span>{[d.address, d.city, d.state, d.zip].filter(Boolean).join(", ") || "No address"}</span>
             {d.website ? <ExternalLink href={d.website} /> : <span>No website</span>}
-            <span className="num">{formatPhone(d.normalizedPhone) ?? d.phone ?? "No phone"}</span>
+            {d.normalizedPhone || d.phone ? (
+              <a href={`tel:${d.normalizedPhone ? `+1${d.normalizedPhone}` : d.phone}`} className="num text-blue-light hover:underline">
+                {formatPhone(d.normalizedPhone) ?? d.phone}
+              </a>
+            ) : (
+              <span className="num">No phone</span>
+            )}
             {d.brands.length ? <span>{d.brands.join(" · ")}</span> : null}
             <span>Checked {timeAgo(d.lastChecked)}</span>
           </span>
         }
       >
+        <SalesStatusBadge status={d.salesStatus} at={d.lastTouchAt} />
         {d.suppressed ? <Badge tone="bad">Suppressed · {label(d.suppressionReason ?? "manual")}</Badge> : null}
         {d.paused ? <Badge tone="warn">Paused</Badge> : null}
         <Badge tone={d.testingApproved ? "good" : "neutral"}>{d.testingApproved ? "Testing approved" : "Testing not approved"}</Badge>
@@ -1103,6 +1114,41 @@ export default async function DealershipPage({ params, searchParams }: { params:
 
         {/* ================= Right column ================= */}
         <div className="space-y-4">
+          <Panel title="Sales log" id="sales">
+            {canOperate ? (
+              <form action={logSalesTouch} className="space-y-2 border-b border-line p-3">
+                {hidden}
+                <input type="hidden" name="dealershipId" value={id} />
+                <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
+                <div className="flex flex-wrap gap-1.5">
+                  {SALES_OUTCOMES.map((o) => (
+                    <button key={o} className={`btn btn-sm ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>
+                      {SALES_OUTCOME_LABEL[o]}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[11.5px] text-faint">One click logs the outcome with the note, moves the pipeline stage, and shows on every list.</p>
+              </form>
+            ) : null}
+            {touches.length === 0 ? (
+              <Empty>Nobody has worked this dealership yet.</Empty>
+            ) : (
+              <ul>
+                {touches.map((t) => (
+                  <li key={t.id} className="border-b border-line-soft px-3 py-2 text-[13px] last:border-b-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SalesStatusBadge status={t.outcome} at={null} />
+                      <span className="text-[11.5px] text-faint">
+                        {t.by} · {fmtDate(t.createdAt, true)}
+                      </span>
+                    </div>
+                    {t.note ? <div className="mt-1 whitespace-pre-wrap">{t.note}</div> : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Panel>
+
           <Panel title="Pipeline & next action">
             <form action={setPipeline} className="space-y-2 p-3">
               {hidden}

@@ -24,6 +24,27 @@ export const PIPELINE_STAGES = [
 ] as const;
 export type PipelineStage = (typeof PIPELINE_STAGES)[number];
 
+/** What happened the last time someone worked this dealership. Logged by hand from the dealership page. */
+export const SALES_OUTCOMES = ["CALLED", "NO_ANSWER", "CALLBACK", "BOOKED_MEETING", "NOT_INTERESTED", "SOLD"] as const;
+export type SalesOutcome = (typeof SALES_OUTCOMES)[number];
+export const SALES_OUTCOME_LABEL: Record<SalesOutcome, string> = {
+  CALLED: "Called",
+  NO_ANSWER: "No answer",
+  CALLBACK: "Call back",
+  BOOKED_MEETING: "Booked meeting",
+  NOT_INTERESTED: "Not interested",
+  SOLD: "Sold",
+};
+/** The pipeline stage each outcome moves the dealership to. */
+export const SALES_OUTCOME_STAGE: Record<SalesOutcome, PipelineStage> = {
+  CALLED: "CONTACTED",
+  NO_ANSWER: "CONTACTED",
+  CALLBACK: "CONTACTED",
+  BOOKED_MEETING: "MEETING_BOOKED",
+  NOT_INTERESTED: "LOST",
+  SOLD: "WON",
+};
+
 /** Result of an operator phoning the dealership. */
 export const RECEPTIONIST_STATUSES = ["UNKNOWN", "HUMAN", "AI_RECEPTIONIST", "IVR_MENU", "VOICEMAIL", "NO_ANSWER"] as const;
 export type ReceptionistStatus = (typeof RECEPTIONIST_STATUSES)[number];

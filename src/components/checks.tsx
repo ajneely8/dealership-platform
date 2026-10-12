@@ -1,4 +1,6 @@
 import type { Answer, Check, Checks, Fit, FitTier } from "@/domain/checks";
+import { Badge, timeAgo } from "./ui";
+import { SALES_OUTCOME_LABEL, type SalesOutcome } from "@/domain/constants";
 
 const ANSWER_STYLE: Record<Answer, string> = {
   YES: "bg-good text-paper",
@@ -49,6 +51,19 @@ export function CheckCards({ checks, extra, append }: { checks: Checks; extra?: 
       })}
       {append}
     </div>
+  );
+}
+
+const OUTCOME_TONE: Record<SalesOutcome, "good" | "warn" | "bad" | "neutral"> = { CALLED: "neutral", NO_ANSWER: "warn", CALLBACK: "warn", BOOKED_MEETING: "good", NOT_INTERESTED: "bad", SOLD: "good" };
+
+/** The last thing a person did with this dealership, e.g. "Booked meeting · 2 days ago". */
+export function SalesStatusBadge({ status, at }: { status: SalesOutcome | null; at: Date | null }) {
+  if (!status) return <span className="text-[12px] text-faint">Not worked yet</span>;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <Badge tone={OUTCOME_TONE[status]}>{SALES_OUTCOME_LABEL[status]}</Badge>
+      {at ? <span className="text-[11.5px] text-muted">{timeAgo(at)}</span> : null}
+    </span>
   );
 }
 

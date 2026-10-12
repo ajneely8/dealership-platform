@@ -1,4 +1,5 @@
 import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
+import type { SalesOutcome } from "@/domain/constants";
 import { db } from "@/db";
 import { dealerGroups, dealerships, salesBriefs, scores, signals, testInteractions, websiteObservations, type ScoreReason } from "@/db/schema";
 import type { PipelineStage, Product } from "@/domain/constants";
@@ -30,6 +31,8 @@ export type OpportunityRow = {
   paused: boolean;
   pipelineStage: PipelineStage;
   nextAction: string | null;
+  salesStatus: SalesOutcome | null;
+  lastTouchAt: Date | null;
   lastChecked: Date | null;
   salesAngle: string | null;
   recommendedRole: string | null;
@@ -174,6 +177,8 @@ export async function listOpportunities(filters: OpportunityFilters = {}, limit 
       paused: d.paused,
       pipelineStage: d.pipelineStage,
       nextAction: d.nextAction,
+      salesStatus: d.salesStatus,
+      lastTouchAt: d.lastTouchAt,
       lastChecked: d.lastChecked,
       salesAngle: brief.get(d.id)?.salesAngle ?? null,
       recommendedRole: brief.get(d.id)?.roles[0] ?? null,

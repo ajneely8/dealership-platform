@@ -1,6 +1,8 @@
 "use server";
 
 import { parse as parseCsv } from "csv-parse/sync";
+import { salesTouches } from "@/db/schema";
+import { SALES_OUTCOMES, SALES_OUTCOME_LABEL, SALES_OUTCOME_STAGE } from "@/domain/constants";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -358,6 +360,25 @@ export async function setPriority(form: FormData) {
     await db().update(dealerships).set({ priorityOverride: value, updatedAt: new Date() }).where(eq(dealerships.id, id));
     await audit(user.email, "dealership.priority", "dealership", id, { priorityOverride: value });
     return value === null ? "Manual priority cleared." : `Manual priority set to ${value}.`;
+  });
+}
+
+/** A person logs what happened with this dealership: called, no answer, booked a meeting, sold… */
+export async function logSalesTouch(form: FormData) {
+  await act(form, "/dealerships", async () => {
+    const user = await requireRole("OPERATOR");
+    const dealershipId = uuid.parse(str(form, "dealershipId"));
+    const outcome = z.enum(SALES_OUTCOMES).parse(str(form, "outcome"));
+    const note = z.string().max(4000).optional().parse(opt(form, "note") ?? undefined) ?? null;
+    const now = new Date();
+    await db().insert(salesTouches).values({ dealershipId, outcome, note, by: user.email });
+    const nextAction = outcome === "CALLBACK" ? "Call back" : outcome === "NO_ANSWER" ? "Try again" : outcome === "BOOKED_MEETING" ? "Prepare for the meeting" : outcome === "SOLD" ? "Onboard the dealership" : outcome === "NOT_INTERESTED" ? null : "Follow up";
+    await db()
+      .update(dealerships)
+      .set({ salesStatus: outcome, lastTouchAt: now, pipelineStage: SALES_OUTCOME_STAGE[outcome], nextAction, updatedAt: now })
+      .where(eq(dealerships.id, dealershipId));
+    await audit(user.email, "dealership.sales_touch", "dealership", dealershipId, { outcome, note: note?.slice(0, 200) ?? null });
+    return `Logged: ${SALES_OUTCOME_LABEL[outcome]}.`;
   });
 }
 
