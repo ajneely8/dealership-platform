@@ -10,6 +10,9 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PLAYWRIGHT_BROWSERS_PATH=/ms-p
 
 FROM base AS deps
 COPY package.json package-lock.json ./
+# redis-memory-server and embedded-postgres only serve local development (npm run fast); the
+# container has real Postgres and Redis, so their install-time downloads are skipped.
+ENV REDISMS_DISABLE_POSTINSTALL=1 EMBEDDED_POSTGRES_SKIP_DOWNLOAD=1
 RUN npm ci --include=dev
 
 FROM deps AS build
