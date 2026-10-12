@@ -1,6 +1,6 @@
 import { createDealership, importDealerships } from "@/app/actions";
 import { A, Badge, Empty, Field, Flash, PageHeader, Panel, ScoreNumber, fmtDate } from "@/components/ui";
-import { CheckRow } from "@/components/checks";
+import { CheckRow, SalesStatusBadge } from "@/components/checks";
 import { db } from "@/db";
 import { dealerGroups } from "@/db/schema";
 import { listOpportunities } from "@/lib/queries";
@@ -42,6 +42,7 @@ export default async function DealershipsPage({ searchParams }: { searchParams: 
                     <th>Location</th>
                     <th>Chatbot · AI receptionist · Lead follow-up</th>
                     <th className="text-right">Inventory</th>
+                    <th>Sales</th>
                     <th>Last checked</th>
                   </tr>
                 </thead>
@@ -65,6 +66,9 @@ export default async function DealershipsPage({ searchParams }: { searchParams: 
                         <CheckRow checks={d.checks} />
                       </td>
                       <td className="num text-right">{d.inventoryCount ?? "—"}</td>
+                      <td className="min-w-[150px]">
+                        <SalesStatusBadge status={d.salesStatus} at={d.lastTouchAt} />
+                      </td>
                       <td className="whitespace-nowrap text-[12px] text-muted">{fmtDate(d.lastChecked)}</td>
                     </tr>
                   ))}

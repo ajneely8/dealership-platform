@@ -1,4 +1,4 @@
-import { CheckRow, FitBadge } from "@/components/checks";
+import { CheckRow, FitBadge, SalesStatusBadge } from "@/components/checks";
 import { fmtUsd } from "@/domain/volume";
 import { A, Badge, Empty, Field, PageHeader, Panel, ProductTag, ScoreNumber, fmtDate, label } from "@/components/ui";
 import { db } from "@/db";
@@ -129,6 +129,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                   <th className="text-right">Inventory</th>
                   <th>Sold a month · gross profit (est.)</th>
                   <th>First response</th>
+                  <th>Sales</th>
                   <th>Stage</th>
                   <th>Next action</th>
                   <th>Checked</th>
@@ -174,6 +175,9 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                       )}
                     </td>
                     <td className="whitespace-nowrap">{o.firstResponseSeconds !== null ? formatDuration(o.firstResponseSeconds) : o.lastTestedAt ? <span className="text-bad">None yet</span> : <span className="text-faint">Not tested</span>}</td>
+                    <td className="min-w-[150px]">
+                      <SalesStatusBadge status={o.salesStatus} at={o.lastTouchAt} />
+                    </td>
                     <td className="whitespace-nowrap">{label(o.pipelineStage)}</td>
                     <td className="min-w-[160px] text-[12.5px]">{o.nextAction ?? "—"}</td>
                     <td className="whitespace-nowrap text-[12px] text-muted">{fmtDate(o.lastChecked)}</td>
