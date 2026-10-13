@@ -1,4 +1,5 @@
 import { DelayedError, Worker, type Job } from "bullmq";
+import { runBuyingIntent } from "@/domain/intent-run";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { dealerships, jobRuns } from "@/db/schema";
@@ -91,6 +92,7 @@ export const HANDLERS: { [Q in QueueName]: Handler<Q> } = {
     if (!outcome) return "SKIPPED: dealership not found";
     const [d] = await db().select({ groupId: dealerships.groupId }).from(dealerships).where(eq(dealerships.id, dealershipId)).limit(1);
     if (d?.groupId) await refreshGroupIntel(d.groupId);
+    await runBuyingIntent(dealershipId);
     await enqueue("sales-intel", { dealershipId, manual });
     await afterAtlas(dealershipId);
     return `OK: priority ${outcome.priority}${outcome.changed ? " (changed)" : ""}`;

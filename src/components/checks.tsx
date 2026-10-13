@@ -54,7 +54,7 @@ export function CheckCards({ checks, extra, append }: { checks: Checks; extra?: 
   );
 }
 
-const OUTCOME_TONE: Record<SalesOutcome, "good" | "warn" | "bad" | "neutral"> = { CALLED: "neutral", NO_ANSWER: "warn", CALLBACK: "warn", BOOKED_MEETING: "good", NOT_INTERESTED: "bad", SOLD: "good" };
+const OUTCOME_TONE: Record<SalesOutcome, "good" | "warn" | "bad" | "neutral"> = { CALLED: "neutral", NO_ANSWER: "warn", CALLBACK: "warn", DECISION_MAKER_REACHED: "good", INTERESTED: "good", BOOKED_MEETING: "good", MEETING_COMPLETED: "good", PROPOSAL_SENT: "good", NOT_INTERESTED: "bad", SOLD: "good" };
 
 /** The last thing a person did with this dealership, e.g. "Booked meeting · 2 days ago". */
 export function SalesStatusBadge({ status, at }: { status: SalesOutcome | null; at: Date | null }) {

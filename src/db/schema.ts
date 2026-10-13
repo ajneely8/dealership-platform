@@ -194,6 +194,11 @@ export const dealerships = pgTable(
     /** Latest sales outcome logged by a person (see sales_touches) and when. */
     salesStatus: text("sales_status").$type<SalesOutcome>(),
     lastTouchAt: ts("last_touch_at"),
+    /** Buying-intent score (0-100), band-independent readiness and confidence; see domain/intent. */
+    buyingIntent: integer("buying_intent"),
+    buyerReadiness: text("buyer_readiness"),
+    intentConfidence: text("intent_confidence"),
+    intentAt: ts("intent_at"),
     pipelineStage: text("pipeline_stage").$type<PipelineStage>().notNull().default("RESEARCHING"),
     nextAction: text("next_action"),
     nextActionDue: ts("next_action_due"),
@@ -235,11 +240,26 @@ export const salesTouches = pgTable(
     dealershipId: uuid("dealership_id").notNull().references(() => dealerships.id, { onDelete: "cascade" }),
     outcome: text("outcome").$type<SalesOutcome>().notNull(),
     note: text("note"),
+    /** Monthly value in dollars, logged with a SOLD outcome. */
+    mrr: integer("mrr"),
     by: text("by").notNull(),
     createdAt: createdAt(),
   },
   (t) => [index("sales_touches_dealer_idx").on(t.dealershipId, t.createdAt)],
 );
+
+/** The explainable buying-intent score: one row per dealership, every signal with its evidence. */
+export const buyingIntentScores = pgTable("buying_intent_scores", {
+  id: id(),
+  dealershipId: uuid("dealership_id").notNull().references(() => dealerships.id, { onDelete: "cascade" }).unique(),
+  score: integer("score").notNull(),
+  band: text("band").notNull(),
+  readiness: text("readiness").notNull(),
+  confidence: text("confidence").notNull(),
+  signals: jsonb("signals").$type<unknown[]>().notNull().default([]),
+  ruleVersion: integer("rule_version").notNull().default(1),
+  computedAt: ts("computed_at").notNull().defaultNow(),
+});
 
 export const notes = pgTable("notes", {
   id: id(),

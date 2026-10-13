@@ -44,6 +44,8 @@ export const settingsSchema = z.object({
   researchWindowEnd: z.string().regex(/^\d{2}:\d{2}$/).default("21:00"),
   /** IANA zone, so daylight-saving changes are handled by the platform. */
   timezone: z.string().min(3).max(64).default("America/Chicago"),
+  /** Monthly price per dealership location, for the projected-MRR figure (projected, never earned). */
+  mrrPerLocation: z.number().int().min(0).max(100_000).default(1500),
   maxAIRequestsPerJob: z.number().int().min(0).max(20).default(3),
   maxAITokensPerJob: z.number().int().min(0).max(200_000).default(20_000),
   screenshotRetentionDays: z.number().int().min(7).max(3650).default(180),

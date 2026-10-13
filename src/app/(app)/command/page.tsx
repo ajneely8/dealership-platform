@@ -1,4 +1,6 @@
 import { DemoBanner, StreamBadge } from "@/components/agents/command";
+import { fmtUsd } from "@/domain/volume";
+import { intentMetrics } from "@/domain/intent-run";
 import { AgentFeed } from "@/components/agents/feed";
 import { AgentStreamProvider } from "@/components/agents/stream";
 import { WorkforceStage } from "@/components/agents/workforce";
@@ -14,7 +16,7 @@ import { AGENTS } from "@/domain/agents";
 export default async function CommandCenterPage({ searchParams }: { searchParams: Promise<{ demo?: string }> }) {
   const { demo: demoParam } = await searchParams;
   const demo = demoParam === "1";
-  const [metrics, agents, events, settings, prospecting, relay] = await Promise.all([commandMetrics(), allAgentsLive(), agentEventsFor({ limit: 40 }), getSettings(), prospectStats(), currentRelay()]);
+  const [metrics, agents, events, settings, prospecting, relay, intent] = await Promise.all([commandMetrics(), allAgentsLive(), agentEventsFor({ limit: 40 }), getSettings(), prospectStats(), currentRelay(), intentMetrics()]);
   const cfg = { enabled: settings.researchWindowEnabled, start: settings.researchWindowStart, end: settings.researchWindowEnd, timezone: settings.timezone };
   const open = isWithinWindow(new Date(), cfg);
   const working = agents.filter((a) => a.status === "WORKING").length;
@@ -49,7 +51,12 @@ export default async function CommandCenterPage({ searchParams }: { searchParams
             { label: "Completed today", value: metrics.completedToday },
             { label: "Awaiting responses", value: metrics.awaitingResponses, hint: "Open live tests" },
             { label: "New opportunities", value: metrics.newOpportunities, hint: "Ready to contact, last 24h" },
-            { label: "High priority", value: metrics.highPriority, hint: "Score 70+" },
+            { label: "High priority", value: intent.high, hint: "Buying intent 75+", tone: "good" },
+            { label: "Medium priority", value: intent.medium, hint: "Buying intent 45–74" },
+            { label: "Confirmed interest", value: intent.confirmed, hint: "Logged by the sales team" },
+            { label: "Meetings booked", value: intent.meetingsBooked, hint: "Dealerships" },
+            { label: "Customers closed", value: intent.customersClosed, hint: `${fmtUsd(intent.mrrEarned)} MRR logged` },
+            { label: "Projected MRR", value: fmtUsd(intent.mrrProjected), hint: `Projected, not earned: high priority × ${fmtUsd(intent.mrrPerLocation)}` },
             { label: "Errors (24h)", value: metrics.failed24h, tone: metrics.failed24h ? "bad" : "default", hint: metrics.failed24h ? "See Jobs" : "None" },
           ]}
         />

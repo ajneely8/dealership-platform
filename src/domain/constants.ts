@@ -15,7 +15,10 @@ export const PIPELINE_STAGES = [
   "READY_TO_CONTACT",
   "CONTACTED",
   "REPLIED",
+  "DECISION_MAKER_REACHED",
+  "INTERESTED",
   "MEETING_BOOKED",
+  "MEETING_COMPLETED",
   "QUALIFIED",
   "PROPOSAL",
   "WON",
@@ -25,13 +28,17 @@ export const PIPELINE_STAGES = [
 export type PipelineStage = (typeof PIPELINE_STAGES)[number];
 
 /** What happened the last time someone worked this dealership. Logged by hand from the dealership page. */
-export const SALES_OUTCOMES = ["CALLED", "NO_ANSWER", "CALLBACK", "BOOKED_MEETING", "NOT_INTERESTED", "SOLD"] as const;
+export const SALES_OUTCOMES = ["CALLED", "NO_ANSWER", "CALLBACK", "DECISION_MAKER_REACHED", "INTERESTED", "BOOKED_MEETING", "MEETING_COMPLETED", "PROPOSAL_SENT", "NOT_INTERESTED", "SOLD"] as const;
 export type SalesOutcome = (typeof SALES_OUTCOMES)[number];
 export const SALES_OUTCOME_LABEL: Record<SalesOutcome, string> = {
   CALLED: "Called",
   NO_ANSWER: "No answer",
   CALLBACK: "Call back",
+  DECISION_MAKER_REACHED: "Reached decision-maker",
+  INTERESTED: "Interested",
   BOOKED_MEETING: "Booked meeting",
+  MEETING_COMPLETED: "Meeting held",
+  PROPOSAL_SENT: "Proposal sent",
   NOT_INTERESTED: "Not interested",
   SOLD: "Sold",
 };
@@ -40,7 +47,11 @@ export const SALES_OUTCOME_STAGE: Record<SalesOutcome, PipelineStage> = {
   CALLED: "CONTACTED",
   NO_ANSWER: "CONTACTED",
   CALLBACK: "CONTACTED",
+  DECISION_MAKER_REACHED: "DECISION_MAKER_REACHED",
+  INTERESTED: "INTERESTED",
   BOOKED_MEETING: "MEETING_BOOKED",
+  MEETING_COMPLETED: "MEETING_COMPLETED",
+  PROPOSAL_SENT: "PROPOSAL",
   NOT_INTERESTED: "LOST",
   SOLD: "WON",
 };

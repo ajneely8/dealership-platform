@@ -1,4 +1,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { AGENTS } from "@/domain/agents";
+import { buyingIntentScores } from "@/db/schema";
+import { INTENT_BAND_LABEL, READINESS_LABEL, type BuyerReadiness, type IntentBand, type IntentSignal } from "@/domain/intent";
 import { estimateVolume, fmtUsd, SEGMENT_LABEL, type Segment } from "@/domain/volume";
 import { twilioConfigured } from "@/lib/telephony";
 import { notFound } from "next/navigation";
@@ -195,6 +198,9 @@ export default async function DealershipPage({ params, searchParams }: { params:
     growthHiring,
   });
   const phoneDisplay = formatPhone(d.normalizedPhone) ?? d.phone;
+  const [intent] = await db().select().from(buyingIntentScores).where(eq(buyingIntentScores.dealershipId, id)).limit(1);
+  const intentSignals = (intent?.signals ?? []) as IntentSignal[];
+  const intentStale = intent ? Date.now() - intent.computedAt.getTime() > 30 * 86_400_000 : false;
 
   return (
     <>
@@ -351,6 +357,72 @@ export default async function DealershipPage({ params, searchParams }: { params:
           <FitBadge fit={fit} />
           {brief?.salesAngle && fit.tier !== "WEAK" ? <span className="max-w-3xl text-muted">{brief.salesAngle}</span> : null}
         </div>
+      </Panel>
+
+      {/* ---- Buying intent: explainable, with readiness kept apart from the score ---- */}
+      <Panel title="Buying intent" id="intent" className="mb-4" action={intent ? <span className="num text-[11px] uppercase tracking-[0.08em] text-muted">Rules v{intent.ruleVersion} · computed {fmtDate(intent.computedAt, true)}</span> : null}>
+        {!intent ? (
+          <Empty>Not scored yet. Atlas scores buying intent after the next research pass.</Empty>
+        ) : (
+          <div className="grid gap-4 p-4 md:grid-cols-[220px_1fr]">
+            <div>
+              <div className="flex items-end gap-2">
+                <span className="num text-[44px] font-medium leading-none" style={{ color: intent.band === "HIGH" ? "var(--color-good)" : intent.band === "MEDIUM" ? "var(--color-warn)" : "var(--color-muted)" }}>
+                  {intent.score}
+                </span>
+                <span className="mb-1 text-[13px] text-muted">/ 100</span>
+              </div>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-charcoal">
+                <div className="h-full rounded-full" style={{ width: `${intent.score}%`, background: intent.band === "HIGH" ? "var(--color-good)" : intent.band === "MEDIUM" ? "var(--color-warn)" : "var(--color-muted)" }} />
+              </div>
+              <div className="mt-2 space-y-1 text-[13px]">
+                <div>
+                  <Badge tone={intent.band === "HIGH" ? "good" : intent.band === "MEDIUM" ? "warn" : "neutral"}>{INTENT_BAND_LABEL[intent.band as IntentBand]}</Badge>
+                </div>
+                <div className="text-muted">
+                  Buyer readiness: <span className="text-text">{READINESS_LABEL[intent.readiness as BuyerReadiness]}</span>
+                </div>
+                <div className="text-muted">
+                  Confidence: <span className="text-text">{intent.confidence.toLowerCase()}</span>
+                </div>
+                {intentStale ? <div className="text-warn">Evidence is over 30 days old; re-run research to revalidate.</div> : null}
+                <p className="text-[12px] text-faint">Fit and interest are separate: a high score never implies the dealership wants to buy. Readiness comes only from logged conversations.</p>
+              </div>
+            </div>
+            <table className="tbl">
+              <thead>
+                <tr>
+                  <th>Signal</th>
+                  <th className="text-right">Points</th>
+                  <th>Status</th>
+                  <th>Confidence</th>
+                  <th>Agent</th>
+                  <th>Evidence</th>
+                </tr>
+              </thead>
+              <tbody>
+                {intentSignals.map((s) => (
+                  <tr key={s.id}>
+                    <td>
+                      {s.label}
+                      <div className="text-[12px] text-muted">{s.detail}</div>
+                    </td>
+                    <td className="num whitespace-nowrap text-right">
+                      {s.points} / {s.max}
+                    </td>
+                    <td>{s.status === "OBSERVED" ? <Badge tone="good">Observed</Badge> : s.status === "INFERRED" ? <Badge tone="warn">Inferred</Badge> : <Badge tone="neutral">Unknown</Badge>}</td>
+                    <td>{s.confidence ? s.confidence.toLowerCase() : "—"}</td>
+                    <td>{AGENTS[s.agent].name}</td>
+                    <td className="text-[12px] text-muted">
+                      {s.evidence.length ? s.evidence.map((e) => `${e.type} ${e.id.slice(0, 8)}`).join(", ") : "—"}
+                      {s.evidenceAt ? <div>{fmtDate(new Date(s.evidenceAt), true)}</div> : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
 
 
@@ -579,6 +651,7 @@ export default async function DealershipPage({ params, searchParams }: { params:
                       {hidden}
                       <input type="hidden" name="dealershipId" value={id} />
                       <textarea className="input" name="note" rows={2} placeholder="What happened? e.g. spoke with the GM, wants a demo Tuesday" />
+                    <input className="input" name="mrr" type="number" min={0} step={50} placeholder="Monthly value in $ (only with Sold)" />
                       <div className="flex flex-wrap gap-1.5">
                         {SALES_OUTCOMES.map((o) => (
                           <button key={o} className={`btn font-semibold ${o === "SOLD" || o === "BOOKED_MEETING" ? "btn-primary" : ""}`} type="submit" name="outcome" value={o}>

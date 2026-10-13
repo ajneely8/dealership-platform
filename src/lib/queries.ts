@@ -33,6 +33,9 @@ export type OpportunityRow = {
   nextAction: string | null;
   salesStatus: SalesOutcome | null;
   lastTouchAt: Date | null;
+  buyingIntent: number | null;
+  buyerReadiness: string | null;
+  intentConfidence: string | null;
   lastChecked: Date | null;
   salesAngle: string | null;
   recommendedRole: string | null;
@@ -179,6 +182,9 @@ export async function listOpportunities(filters: OpportunityFilters = {}, limit 
       nextAction: d.nextAction,
       salesStatus: d.salesStatus,
       lastTouchAt: d.lastTouchAt,
+      buyingIntent: d.buyingIntent,
+      buyerReadiness: d.buyerReadiness,
+      intentConfidence: d.intentConfidence,
       lastChecked: d.lastChecked,
       salesAngle: brief.get(d.id)?.salesAngle ?? null,
       recommendedRole: brief.get(d.id)?.roles[0] ?? null,

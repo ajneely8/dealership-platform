@@ -1,4 +1,5 @@
 import { CheckRow, FitBadge, SalesStatusBadge } from "@/components/checks";
+import { READINESS_LABEL, type BuyerReadiness } from "@/domain/intent";
 import { fmtUsd } from "@/domain/volume";
 import { A, Badge, Empty, Field, PageHeader, Panel, ProductTag, ScoreNumber, fmtDate, label } from "@/components/ui";
 import { db } from "@/db";
@@ -29,6 +30,16 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
   // Strong fits first, then possible fits, then the unknowns and weak ones; highest priority within each.
   const tierOrder = { STRONG: 0, POSSIBLE: 1, UNKNOWN: 2, WEAK: 3 } as const;
   rows.sort((a, b) => tierOrder[a.fit.tier] - tierOrder[b.fit.tier] || b.priority - a.priority);
+  const band = (["high", "medium", "low"] as const).find((x) => x === p.band);
+  if (band) {
+    const keep = rows.filter((r) => {
+      const s = r.buyingIntent ?? -1;
+      return band === "high" ? s >= 75 : band === "medium" ? s >= 45 && s < 75 : s >= 0 && s < 45;
+    });
+    rows.length = 0;
+    rows.push(...keep);
+  }
+  if (p.sort === "intent") rows.sort((a, b) => (b.buyingIntent ?? -1) - (a.buyingIntent ?? -1) || b.priority - a.priority);
   const strong = rows.filter((r) => r.fit.tier === "STRONG").length;
   const possible = rows.filter((r) => r.fit.tier === "POSSIBLE").length;
   const filtered = Object.entries(p).some(([k, v]) => v && k !== "notice" && k !== "error");
@@ -39,6 +50,14 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 
       <Panel className="mb-3">
         <form className="grid grid-cols-2 gap-2 p-3 md:grid-cols-4 xl:grid-cols-6">
+          <Field label="Buying intent">
+            <select className="input" name="band" defaultValue={p.band ?? ""}>
+              <option value="">Any</option>
+              <option value="high">High (75+)</option>
+              <option value="medium">Medium (45–74)</option>
+              <option value="low">Low (under 45)</option>
+            </select>
+          </Field>
           <Field label="State">
             <input className="input" name="state" defaultValue={p.state} maxLength={2} placeholder="TX" />
           </Field>
@@ -129,6 +148,9 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                   <th className="text-right">Inventory</th>
                   <th>Sold a month · gross profit (est.)</th>
                   <th>First response</th>
+                  <th>
+                    <A href="?sort=intent">Buying intent</A>
+                  </th>
                   <th>Sales</th>
                   <th>Stage</th>
                   <th>Next action</th>
@@ -175,6 +197,19 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                       )}
                     </td>
                     <td className="whitespace-nowrap">{o.firstResponseSeconds !== null ? formatDuration(o.firstResponseSeconds) : o.lastTestedAt ? <span className="text-bad">None yet</span> : <span className="text-faint">Not tested</span>}</td>
+                    <td className="min-w-[150px]">
+                      {o.buyingIntent !== null ? (
+                        <>
+                          <span className="num text-[16px] font-medium" style={{ color: o.buyingIntent >= 75 ? "var(--color-good)" : o.buyingIntent >= 45 ? "var(--color-warn)" : "var(--color-muted)" }}>
+                            {o.buyingIntent}
+                          </span>
+                          <span className="text-[11px] text-muted"> /100 · {o.buyingIntent >= 75 ? "high" : o.buyingIntent >= 45 ? "medium" : "low"}</span>
+                          <div className="text-[11.5px] text-muted">{READINESS_LABEL[(o.buyerReadiness ?? "NO_DEMONSTRATED_INTEREST") as BuyerReadiness]}</div>
+                        </>
+                      ) : (
+                        <span className="text-[12px] text-faint">not scored yet</span>
+                      )}
+                    </td>
                     <td className="min-w-[150px]">
                       <SalesStatusBadge status={o.salesStatus} at={o.lastTouchAt} />
                     </td>

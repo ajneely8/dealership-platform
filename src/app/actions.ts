@@ -1,6 +1,7 @@
 "use server";
 
 import { parse as parseCsv } from "csv-parse/sync";
+import { runBuyingIntent } from "@/domain/intent-run";
 import { salesTouches } from "@/db/schema";
 import { SALES_OUTCOMES, SALES_OUTCOME_LABEL, SALES_OUTCOME_STAGE } from "@/domain/constants";
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -370,14 +371,17 @@ export async function logSalesTouch(form: FormData) {
     const dealershipId = uuid.parse(str(form, "dealershipId"));
     const outcome = z.enum(SALES_OUTCOMES).parse(str(form, "outcome"));
     const note = z.string().max(4000).optional().parse(opt(form, "note") ?? undefined) ?? null;
+    const mrrRaw = opt(form, "mrr");
+    const mrr = outcome === "SOLD" && mrrRaw ? z.coerce.number().int().min(0).max(1_000_000).parse(mrrRaw) : null;
     const now = new Date();
-    await db().insert(salesTouches).values({ dealershipId, outcome, note, by: user.email });
+    await db().insert(salesTouches).values({ dealershipId, outcome, note, mrr, by: user.email });
     const nextAction = outcome === "CALLBACK" ? "Call back" : outcome === "NO_ANSWER" ? "Try again" : outcome === "BOOKED_MEETING" ? "Prepare for the meeting" : outcome === "SOLD" ? "Onboard the dealership" : outcome === "NOT_INTERESTED" ? null : "Follow up";
     await db()
       .update(dealerships)
       .set({ salesStatus: outcome, lastTouchAt: now, pipelineStage: SALES_OUTCOME_STAGE[outcome], nextAction, updatedAt: now })
       .where(eq(dealerships.id, dealershipId));
-    await audit(user.email, "dealership.sales_touch", "dealership", dealershipId, { outcome, note: note?.slice(0, 200) ?? null });
+    await audit(user.email, "dealership.sales_touch", "dealership", dealershipId, { outcome, mrr, note: note?.slice(0, 200) ?? null });
+    await runBuyingIntent(dealershipId, "orion").catch(() => undefined);
     return `Logged: ${SALES_OUTCOME_LABEL[outcome]}.`;
   });
 }
