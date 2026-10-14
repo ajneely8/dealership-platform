@@ -1,4 +1,5 @@
 import { and, count, eq, isNull, or, sql } from "drizzle-orm";
+import { FRANCHISE, isFranchise, NATIONAL_CHAINS } from "@/domain/ownership";
 import { db } from "@/db";
 import { dealerships, prospects } from "@/db/schema";
 import { dedupeKeys, findDuplicateInDb } from "@/domain/dedupe";
@@ -230,21 +231,9 @@ const US_METROS: { name: string; lat: number; lng: number }[] = [
 /** Metros in a row that gave nothing new; after a full lap the radius grows. */
 let emptyStreak = 0;
 let metroIndex = 0;
-/**
- * Franchise (manufacturer-branded) stores are not targets: the product is for independent,
- * small-to-medium dealerships. Matched against the OSM brand tag, the name and the domain.
- */
-export const FRANCHISE = /\b(ford|lincoln|chevrolet|chevy|gmc|buick|cadillac|chrysler|jeep|dodge|ram|cdjr|fiat|alfa romeo|maserati|toyota|lexus|honda|acura|nissan|infiniti|hyundai|genesis|kia|mazda|subaru|mitsubishi|volkswagen|vw|audi|bmw|mini|mercedes|benz|porsche|volvo|jaguar|land rover|range rover|tesla|rivian|lucid|polestar|scion|saturn|pontiac|oldsmobile|isuzu|suzuki)\b/i;
-const FRANCHISE_DOMAIN = /ford|lincoln|chevrolet|chevy|gmc|buick|cadillac|chrysler|jeep|dodge|cdjr|toyota|lexus|honda|acura|nissan|infiniti|hyundai|genesis|kia(?![a-z])|mazda|subaru|mitsubishi|volkswagen|audi|bmw|mercedes|porsche|volvo|jaguar|landrover/i;
 /** Not car dealers at all, even though the map tags them shop=car. */
 const NOT_A_CAR_DEALER = /\brvs?\b|motorhome|camper|motorcycle|harley|powersports|\batv\b|boat|marine|trailer|golf cart|\bsemi\b|truck center|tractor|equipment/i;
-/** Is this candidate a manufacturer franchise store? */
-export function isFranchise(c: { name: string; domain?: string | null; brand?: string | null }): boolean {
-  if (c.brand && c.brand.trim()) return true;
-  if (FRANCHISE.test(c.name)) return true;
-  if (c.domain && FRANCHISE_DOMAIN.test(c.domain)) return true;
-  return false;
-}
+export { isFranchise };
 /** United States only (continental box; Alaska and Hawaii are outside the search radius anyway). */
 const CA_PROVINCE = /^(ON|QC|BC|AB|MB|SK|NS|NB|NL|PE|NT|YT|NU|Ontario|Quebec|British Columbia|Alberta|Manitoba|Saskatchewan|Nova Scotia|New Brunswick|Newfoundland|Prince Edward Island)\b/i;
 const CA_POSTCODE = /\b[A-CEGHJ-NPRSTVXY]\d[A-Z] ?\d[A-Z]\d\b/i;
@@ -257,8 +246,6 @@ function inUnitedStates(lat: number | null, lng: number | null, country: string 
   return lat >= 24.3 && lat <= 49.5 && lng >= -125 && lng <= -66.5;
 }
 
-/** National chains and non-dealer car businesses that are never prospects. */
-const NATIONAL_CHAINS = /carmax|carvana|autonation|drivetime|vroom|shift.com|enterprise|hertz|avis|budget|copart|iaa[i.]|tesla|rivian|lucid|echopark|byrider|lithia|sonic|group1|penske/i;
 const MIN_RADIUS_KM = 40;
 const MAX_RADIUS_KM = 520;
 let lastFetchAt = 0;

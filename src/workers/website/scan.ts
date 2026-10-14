@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { storeOwnership } from "@/lib/ownership-store";
+import { classifyOwnership } from "@/domain/ownership";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { dealerGroups, dealerships, evidence, inventorySnapshots, signals, socialProfiles, websiteObservations, type DetectedForm, type VisitedPage } from "@/db/schema";
@@ -195,7 +197,17 @@ export async function runWebsiteScan(dealershipId: string): Promise<string> {
     const schedulerPage = schedulerLink ? await visit(schedulerLink, "SCHEDULER", servicePage ? undefined : "SERVICE") : null;
     const careersUrl = links.CAREERS?.[0] ?? null;
     const careersPage = careersUrl ? await visit(careersUrl, "CAREERS") : null;
-    // The about page adds little the homepage did not already give; skipped to keep scans quick.
+    // Ownership: what the dealership says about itself on its About page (or homepage).
+    {
+      const aboutUrl = links.ABOUT?.[0] ?? null;
+      const aboutPage = aboutUrl ? await visit(aboutUrl, "ABOUT") : null;
+      const [who] = await db().select({ name: dealerships.name, brands: dealerships.brands, domain: dealerships.normalizedDomain }).from(dealerships).where(eq(dealerships.id, dealer.id)).limit(1);
+      if (who) {
+        const text = `${aboutPage?.text ?? ""}\n${home.text}`;
+        const ownership = classifyOwnership({ name: who.name, domain: who.domain, brands: who.brands, text });
+        await storeOwnership(dealer.id, ownership, { url: ownership.status === "UNVERIFIED" ? null : (aboutPage?.url ?? home.url), by: "system:website" });
+      }
+    }
 
     // --- Turn snapshots into findings (pure functions) -------------------------
     const all = snapshots.map((s) => s.snapshot);

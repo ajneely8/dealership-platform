@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { OWNERSHIP_LABEL, OWNERSHIP_STATUSES } from "@/domain/ownership";
 import { AGENTS } from "@/domain/agents";
 import { buyingIntentScores } from "@/db/schema";
 import { INTENT_BAND_LABEL, READINESS_LABEL, type BuyerReadiness, type IntentBand, type IntentSignal } from "@/domain/intent";
@@ -9,6 +10,7 @@ import {
   addContact,
   addNote,
   logSalesTouch,
+  setOwnership,
   approveInteraction,
   cancelInteraction,
   createSignal,
@@ -423,6 +425,52 @@ export default async function DealershipPage({ params, searchParams }: { params:
             </table>
           </div>
         )}
+      </Panel>
+
+      {/* ---- Ownership: who runs it, with the evidence ---- */}
+      <Panel title="Ownership" id="ownership" className="mb-4" action={<Badge tone={d.ownership === "FAMILY_OWNED_INDEPENDENT" ? "good" : d.ownership === "PRIVATELY_OWNED_INDEPENDENT" ? "warn" : d.ownership === "EXCLUDED" ? "bad" : "neutral"}>{OWNERSHIP_LABEL[d.ownership]}</Badge>}>
+        <div className="grid gap-4 p-4 md:grid-cols-[1fr_1fr]">
+          <div className="space-y-2 text-[13px]">
+            {d.ownershipQuote ? (
+              <blockquote className="rounded-md border border-line bg-charcoal px-3 py-2 leading-relaxed text-muted">
+                <span className="eyebrow block">What the source says</span>&ldquo;{d.ownershipQuote}&rdquo;
+              </blockquote>
+            ) : (
+              <p className="text-muted">{d.ownershipReason ?? "Not checked yet. Nova reads the About page on the next website scan."}</p>
+            )}
+            {d.ownershipQuote && d.ownershipReason ? <p className="text-[12.5px] text-faint">{d.ownershipReason}</p> : null}
+            <Row k="Source" v={d.ownershipSourceUrl ? <ExternalLink href={d.ownershipSourceUrl} /> : "—"} />
+            <Row k="Verified" v={d.ownershipVerifiedAt ? `${fmtDate(d.ownershipVerifiedAt, true)} by ${d.ownershipVerifiedBy?.replace(/^manual:/, "") ?? "—"}` : "not verified"} />
+            <Row k="Last checked" v={d.ownershipCheckedAt ? fmtDate(d.ownershipCheckedAt, true) : "—"} />
+            <Row k="Locations" v={group[0] ? `${Math.max(group[0].storeCount ?? 0, 1)} on file for ${group[0].name}` : "single rooftop (no group linked)"} />
+            <p className="text-[12px] text-faint">Only verified family-owned independents enter the call queue. Small does not mean family-owned; a statement or a record does.</p>
+          </div>
+          {canOperate ? (
+            <form action={setOwnership} className="space-y-2">
+              {hidden}
+              <input type="hidden" name="dealershipId" value={id} />
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Verify or correct by hand</div>
+              <Field label="Classification">
+                <select className="input" name="ownership" defaultValue={d.ownership}>
+                  {OWNERSHIP_STATUSES.map((s) => (
+                    <option key={s} value={s}>
+                      {OWNERSHIP_LABEL[s]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Source URL" hint="About page, state dealer-licence record, business registry, news article.">
+                <input className="input" name="sourceUrl" placeholder="https://…" />
+              </Field>
+              <Field label="What it says">
+                <input className="input" name="quote" placeholder="e.g. Family owned and operated since 1987 by the Garza family" />
+              </Field>
+              <button className="btn btn-sm" type="submit">
+                Save ownership
+              </button>
+            </form>
+          ) : null}
+        </div>
       </Panel>
 
 

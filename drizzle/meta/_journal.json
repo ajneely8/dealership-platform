@@ -99,6 +99,13 @@
       "when": 1791934998216,
       "tag": "0013_buying_intent",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791936606773,
+      "tag": "0014_ownership",
+      "breakpoints": true
     }
   ]
 }

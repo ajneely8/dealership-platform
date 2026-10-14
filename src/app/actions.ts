@@ -1,6 +1,8 @@
 "use server";
 
 import { parse as parseCsv } from "csv-parse/sync";
+import { storeOwnership } from "@/lib/ownership-store";
+import { OWNERSHIP_LABEL, OWNERSHIP_STATUSES } from "@/domain/ownership";
 import { runBuyingIntent } from "@/domain/intent-run";
 import { salesTouches } from "@/db/schema";
 import { SALES_OUTCOMES, SALES_OUTCOME_LABEL, SALES_OUTCOME_STAGE } from "@/domain/constants";
@@ -361,6 +363,21 @@ export async function setPriority(form: FormData) {
     await db().update(dealerships).set({ priorityOverride: value, updatedAt: new Date() }).where(eq(dealerships.id, id));
     await audit(user.email, "dealership.priority", "dealership", id, { priorityOverride: value });
     return value === null ? "Manual priority cleared." : `Manual priority set to ${value}.`;
+  });
+}
+
+/** A sales manager verifies or corrects ownership by hand, with the source. Overrides the automatic read. */
+export async function setOwnership(form: FormData) {
+  await act(form, "/dealerships", async () => {
+    const user = await requireRole("OPERATOR");
+    const dealershipId = uuid.parse(str(form, "dealershipId"));
+    const status = z.enum(OWNERSHIP_STATUSES).parse(str(form, "ownership"));
+    const quote = opt(form, "quote");
+    const sourceUrl = opt(form, "sourceUrl");
+    if (status !== "UNVERIFIED" && !sourceUrl) throw new Error("A source is required to verify ownership (About page, state dealer licence, business registry…).");
+    await storeOwnership(dealershipId, { status, quote, reason: `verified by ${user.email}`, confidence: "HIGH" }, { url: sourceUrl, by: `manual:${user.email}` });
+    await audit(user.email, "dealership.ownership", "dealership", dealershipId, { status, sourceUrl, quote: quote?.slice(0, 200) ?? null });
+    return `Ownership set: ${OWNERSHIP_LABEL[status]}.`;
   });
 }
 

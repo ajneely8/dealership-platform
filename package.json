@@ -26,7 +26,8 @@
     "settings-admin": "node scripts/with-dev-env.mjs scripts/settings-admin.ts",
     "phone-admin": "node scripts/with-dev-env.mjs scripts/phone-admin.ts",
     "sync-to-hosted": "node scripts/with-dev-env.mjs scripts/sync-to-hosted.ts",
-    "intent-admin": "node scripts/with-dev-env.mjs scripts/intent-admin.ts"
+    "intent-admin": "node scripts/with-dev-env.mjs scripts/intent-admin.ts",
+    "ownership-admin": "node scripts/with-dev-env.mjs scripts/ownership-admin.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

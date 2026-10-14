@@ -1,4 +1,5 @@
-import { and, desc, eq, gte, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNotNull, sql, lte } from "drizzle-orm";
+import type { OwnershipStatus } from "@/domain/ownership";
 import type { SalesOutcome } from "@/domain/constants";
 import { db } from "@/db";
 import { dealerGroups, dealerships, salesBriefs, scores, signals, testInteractions, websiteObservations, type ScoreReason } from "@/db/schema";
@@ -36,6 +37,9 @@ export type OpportunityRow = {
   buyingIntent: number | null;
   buyerReadiness: string | null;
   intentConfidence: string | null;
+  ownership: OwnershipStatus;
+  ownershipVerifiedAt: Date | null;
+  rooftops: number;
   lastChecked: Date | null;
   salesAngle: string | null;
   recommendedRole: string | null;
@@ -58,6 +62,10 @@ export type OpportunityFilters = {
   hiring?: boolean;
   technology?: string;
   suppression?: "active" | "suppressed" | "all";
+  /** family (default on the lists) | private | unverified | excluded | any */
+  ownership?: "family" | "private" | "unverified" | "excluded" | "any";
+  verifiedOnly?: boolean;
+  rooftops2to5?: boolean;
 };
 
 /** Effective priority: an operator's manual override wins over the computed score. */
@@ -73,9 +81,16 @@ export async function listOpportunities(filters: OpportunityFilters = {}, limit 
   if (filters.minInventory) where.push(gte(dealerships.inventoryCount, filters.minInventory));
   const suppression = filters.suppression ?? "active";
   if (suppression !== "all") where.push(eq(dealerships.suppressed, suppression === "suppressed"));
+  const own = filters.ownership ?? "any";
+  if (own === "family") where.push(eq(dealerships.ownership, "FAMILY_OWNED_INDEPENDENT"));
+  else if (own === "private") where.push(eq(dealerships.ownership, "PRIVATELY_OWNED_INDEPENDENT"));
+  else if (own === "unverified") where.push(eq(dealerships.ownership, "UNVERIFIED"));
+  else if (own === "excluded") where.push(eq(dealerships.ownership, "EXCLUDED"));
+  if (filters.verifiedOnly) where.push(isNotNull(dealerships.ownershipVerifiedAt));
+  if (filters.rooftops2to5) where.push(and(gte(dealerGroups.storeCount, 2), lte(dealerGroups.storeCount, 5))!);
 
   const rows = await db()
-    .select({ d: dealerships, groupName: dealerGroups.name, priority: effectivePriority })
+    .select({ d: dealerships, groupName: dealerGroups.name, storeCount: dealerGroups.storeCount, priority: effectivePriority })
     .from(dealerships)
     .leftJoin(dealerGroups, eq(dealerGroups.id, dealerships.groupId))
     .where(where.length ? and(...where) : undefined)
@@ -133,7 +148,7 @@ export async function listOpportunities(filters: OpportunityFilters = {}, limit 
   const growthTitles = new Map<string, string[]>();
   for (const h of hiring) if (h.dealershipId) growthTitles.set(h.dealershipId, [...(growthTitles.get(h.dealershipId) ?? []), h.title]);
 
-  const out: OpportunityRow[] = rows.map(({ d, groupName, priority }) => {
+  const out: OpportunityRow[] = rows.map(({ d, groupName, storeCount, priority }) => {
     const own = scoreRows.filter((s) => s.dealershipId === d.id);
     const top = d.recommendedProduct ? own.find((s) => s.product === d.recommendedProduct) : undefined;
     const topReason = top ? ([...top.reasons].sort((a, b) => b.points - a.points)[0] ?? null) : null;
@@ -185,6 +200,9 @@ export async function listOpportunities(filters: OpportunityFilters = {}, limit 
       buyingIntent: d.buyingIntent,
       buyerReadiness: d.buyerReadiness,
       intentConfidence: d.intentConfidence,
+      ownership: d.ownership,
+      ownershipVerifiedAt: d.ownershipVerifiedAt,
+      rooftops: Math.max(storeCount ?? 0, 1),
       lastChecked: d.lastChecked,
       salesAngle: brief.get(d.id)?.salesAngle ?? null,
       recommendedRole: brief.get(d.id)?.roles[0] ?? null,

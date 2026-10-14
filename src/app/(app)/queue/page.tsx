@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, isNull, lte, notInArray, or, sql } from "drizzle-orm";
+import { OWNERSHIP_LABEL } from "@/domain/ownership";
 import { CopyButton } from "@/components/agent-ui";
 import { SalesStatusBadge } from "@/components/checks";
 import { A, Badge, Empty, PageHeader, Panel, fmtDate } from "@/components/ui";
@@ -33,12 +34,19 @@ export default async function CallQueuePage({ searchParams }: { searchParams: Pr
         eq(dealerships.suppressed, false),
         eq(dealerships.paused, false),
         notInArray(dealerships.pipelineStage, ["WON", "LOST", "SUPPRESSED"]),
+        eq(dealerships.ownership, "FAMILY_OWNED_INDEPENDENT"),
         or(isNull(dealerships.buyerReadiness), sql`${dealerships.buyerReadiness} <> 'NOT_INTERESTED'`),
         or(isNull(dealerships.lastTouchAt), lte(dealerships.lastTouchAt, twoDaysAgo), and(sql`${dealerships.nextActionDue} is not null`, lte(dealerships.nextActionDue, now))),
       ),
     )
     .orderBy(desc(dealerships.buyingIntent))
     .limit(600);
+  const research = await db()
+    .select({ id: dealerships.id, name: dealerships.name, city: dealerships.city, state: dealerships.state, ownership: dealerships.ownership, score: dealerships.buyingIntent, website: dealerships.website })
+    .from(dealerships)
+    .where(and(eq(dealerships.suppressed, false), inArray(dealerships.ownership, ["PRIVATELY_OWNED_INDEPENDENT", "UNVERIFIED"]), notInArray(dealerships.pipelineStage, ["WON", "LOST", "SUPPRESSED"])))
+    .orderBy(desc(dealerships.buyingIntent))
+    .limit(30);
   const ids = rows.map((r) => r.d.id);
   const briefs = ids.length ? await db().select().from(salesBriefs).where(inArray(salesBriefs.dealershipId, ids)).orderBy(desc(salesBriefs.generatedAt)) : [];
   const briefOf = new Map<string, (typeof briefs)[number]>();
@@ -55,7 +63,7 @@ export default async function CallQueuePage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader title="Call queue" sub={`${ranked.length} dealership(s) in order · ${isWithinWindow(now, windowCfg) ? "inside" : "outside"} approved outreach hours (${describeWindow(windowCfg)}) · follow-ups that are due come first, then confirmed interest, then buying intent`}>
+      <PageHeader title="Call queue" sub={`${ranked.length} verified family-owned independent dealership(s) in order · ${isWithinWindow(now, windowCfg) ? "inside" : "outside"} approved outreach hours (${describeWindow(windowCfg)}) · follow-ups that are due come first, then confirmed interest, then buying intent`}>
         <A href="/opportunities">All scores</A>
         <A href="/results">Results by band</A>
       </PageHeader>
@@ -144,6 +152,36 @@ export default async function CallQueuePage({ searchParams }: { searchParams: Pr
           })}
         </div>
       )}
+      <Panel title="Research queue · not yet eligible" className="mt-6">
+        <p className="px-4 py-2 text-[12.5px] text-muted">Privately owned or unverified dealerships are never assigned to the outbound queue. Verify ownership on the dealership page (About page, state dealer licence, business registry) and they move up; franchise and corporate stores are excluded for good.</p>
+        {research.length === 0 ? (
+          <Empty>Nothing waiting for verification.</Empty>
+        ) : (
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>Dealership</th>
+                <th>Ownership</th>
+                <th className="text-right">Buying intent</th>
+                <th>Verify</th>
+              </tr>
+            </thead>
+            <tbody>
+              {research.map((r) => (
+                <tr key={r.id}>
+                  <td>
+                    <A href={`/dealerships/${r.id}#ownership`}>{r.name}</A>
+                    <span className="ml-2 text-[12px] text-muted">{[r.city, r.state].filter(Boolean).join(", ")}</span>
+                  </td>
+                  <td>{OWNERSHIP_LABEL[r.ownership]}</td>
+                  <td className="num text-right">{r.score ?? "—"}</td>
+                  <td className="text-[12.5px]">{r.website ? <a href={r.website} target="_blank" rel="noreferrer" className="text-blue-light hover:underline">Open site</a> : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Panel>
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { CheckRow, FitBadge, SalesStatusBadge } from "@/components/checks";
+import { OWNERSHIP_LABEL } from "@/domain/ownership";
 import { READINESS_LABEL, type BuyerReadiness } from "@/domain/intent";
 import { fmtUsd } from "@/domain/volume";
 import { A, Badge, Empty, Field, PageHeader, Panel, ProductTag, ScoreNumber, fmtDate, label } from "@/components/ui";
@@ -25,6 +26,9 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
     hiring: p.hiring === "1",
     technology: p.tech || undefined,
     suppression: (["active", "suppressed", "all"] as const).find((x) => x === p.suppression) ?? "active",
+    ownership: (["family", "private", "unverified", "excluded", "any"] as const).find((x) => x === p.ownership) ?? "family",
+    verifiedOnly: p.verified === "1",
+    rooftops2to5: p.rooftops === "1",
   };
   const [rows, groups] = await Promise.all([listOpportunities(filters), db().select({ id: dealerGroups.id, name: dealerGroups.name }).from(dealerGroups).orderBy(dealerGroups.name)]);
   // Strong fits first, then possible fits, then the unknowns and weak ones; highest priority within each.
@@ -50,6 +54,27 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
 
       <Panel className="mb-3">
         <form className="grid grid-cols-2 gap-2 p-3 md:grid-cols-4 xl:grid-cols-6">
+          <Field label="Ownership">
+            <select className="input" name="ownership" defaultValue={p.ownership ?? "family"}>
+              <option value="family">Family-owned only (default)</option>
+              <option value="private">Privately owned, family not verified</option>
+              <option value="unverified">Ownership unverified</option>
+              <option value="any">Any (includes unverified)</option>
+              <option value="excluded">Excluded: franchise / corporate</option>
+            </select>
+          </Field>
+          <Field label="Verified ownership">
+            <select className="input" name="verified" defaultValue={p.verified ?? ""}>
+              <option value="">Any</option>
+              <option value="1">Verified only</option>
+            </select>
+          </Field>
+          <Field label="Locations">
+            <select className="input" name="rooftops" defaultValue={p.rooftops ?? ""}>
+              <option value="">Any</option>
+              <option value="1">2–5 locations (preferred)</option>
+            </select>
+          </Field>
           <Field label="Buying intent">
             <select className="input" name="band" defaultValue={p.band ?? ""}>
               <option value="">Any</option>
@@ -148,6 +173,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                   <th className="text-right">Inventory</th>
                   <th>Sold a month · gross profit (est.)</th>
                   <th>First response</th>
+                  <th>Ownership</th>
                   <th>
                     <A href="?sort=intent">Buying intent</A>
                   </th>
@@ -197,6 +223,10 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
                       )}
                     </td>
                     <td className="whitespace-nowrap">{o.firstResponseSeconds !== null ? formatDuration(o.firstResponseSeconds) : o.lastTestedAt ? <span className="text-bad">None yet</span> : <span className="text-faint">Not tested</span>}</td>
+                    <td className="min-w-[160px] text-[12.5px]">
+                      <Badge tone={o.ownership === "FAMILY_OWNED_INDEPENDENT" ? "good" : o.ownership === "PRIVATELY_OWNED_INDEPENDENT" ? "warn" : o.ownership === "EXCLUDED" ? "bad" : "neutral"}>{OWNERSHIP_LABEL[o.ownership].replace(" independent", "").replace("Verified ", "")}</Badge>
+                      <div className="text-muted">{o.rooftops > 1 ? `${o.rooftops} locations` : "single rooftop"}{o.ownershipVerifiedAt ? ` · verified ${fmtDate(o.ownershipVerifiedAt)}` : ""}</div>
+                    </td>
                     <td className="min-w-[150px]">
                       {o.buyingIntent !== null ? (
                         <>

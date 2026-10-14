@@ -1,4 +1,5 @@
 import { boolean, doublePrecision, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import type { OwnershipStatus } from "@/domain/ownership";
 import type { SalesOutcome } from "@/domain/constants";
 import type {
   Channel,
@@ -195,6 +196,15 @@ export const dealerships = pgTable(
     salesStatus: text("sales_status").$type<SalesOutcome>(),
     lastTouchAt: ts("last_touch_at"),
     /** Buying-intent score (0-100), band-independent readiness and confidence; see domain/intent. */
+    /** Who owns it, with the evidence (see domain/ownership). Only verified family-owned independents reach the call queue. */
+    ownership: text("ownership").$type<OwnershipStatus>().notNull().default("UNVERIFIED"),
+    ownershipQuote: text("ownership_quote"),
+    ownershipReason: text("ownership_reason"),
+    ownershipSourceUrl: text("ownership_source_url"),
+    ownershipMethod: text("ownership_method"),
+    ownershipVerifiedAt: ts("ownership_verified_at"),
+    ownershipVerifiedBy: text("ownership_verified_by"),
+    ownershipCheckedAt: ts("ownership_checked_at"),
     buyingIntent: integer("buying_intent"),
     buyerReadiness: text("buyer_readiness"),
     intentConfidence: text("intent_confidence"),

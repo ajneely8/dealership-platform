@@ -26,6 +26,7 @@ export type AuditAction =
   | "dealership.testing_approval"
   | "dealership.pipeline"
   | "dealership.sales_touch"
+  | "dealership.ownership"
   | "dealership.priority"
   | "group.created"
   | "group.updated"
