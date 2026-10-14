@@ -35,7 +35,9 @@ export function isFranchise(c: { name: string; domain?: string | null; brand?: s
   return false;
 }
 
-const FAMILY = /\b(family[- ](owned|run|operated)|owned (and|&) operated by the [A-Z][a-z]+ family|(second|third|fourth|2nd|3rd|4th|three|two)[- ]generation|father[- ]and[- ]son|husband[- ]and[- ]wife|our family (has|have|is|business)|a family business|family dealership)\b/i;
+const FAMILY = /\b(family[- ](owned|run|operated)|owned (and|&) operated by the [A-Z][a-z]+ family|(second|third|fourth|2nd|3rd|4th|three|two)[- ]generation (family|business|dealer|owned)|(father|mother)[- ]and[- ](son|daughter) (owned|operated|business|dealership|team)|husband[- ]and[- ]wife (owned|operated|team|business)|our family business|a family business|family dealership)\b/i;
+/** A sentence written by a customer (a review or testimonial) is not the dealership describing itself. */
+const CUSTOMER_VOICE = /\b(i|i've|i'm|we|my|our)\s+(bought|purchased|got|had|have bought|have purchased|will|would|highly recommend|recommend|love|loved)\b|\b(purchased|bought) (a|my|our|the) (car|truck|vehicle|suv)\b|\bthey (are|were) (a |an )?(great|awesome|amazing|wonderful|very|so)\b|\b(highly|definitely) recommend\b|\b(stars?|review|testimonial)\b/i;
 const PRIVATE = /\b((locally|independently|privately|veteran|woman|minority)[- ]owned|owner[- ]operated|independent (used[- ]car )?dealer(ship)?|owned (and|&) operated)\b/i;
 const CORPORATE = /\b(publicly[- ]traded|nyse|nasdaq|a subsidiary of|part of the [A-Z][A-Za-z]+ (automotive|auto) group|fortune 500)\b/i;
 const CLAIMED_FRANCHISE = /\b(authorized|franchised?|official) (dealer|dealership) (for|of)\b|\bnew (ford|chevrolet|toyota|honda|nissan|hyundai|kia|subaru|mazda|bmw|mercedes)\b/i;
@@ -47,12 +49,23 @@ export function classifyOwnership(input: { name: string; domain: string | null; 
   const { text } = input;
   if (isFranchise({ name: input.name, domain: input.domain, brands: input.brands })) return { status: "EXCLUDED", quote: null, reason: "manufacturer franchise store (name, brand or domain)", confidence: "HIGH" };
   if (NATIONAL_CHAINS.test(input.name) || (input.domain && NATIONAL_CHAINS.test(input.domain))) return { status: "EXCLUDED", quote: null, reason: "national chain or corporate group", confidence: "HIGH" };
+  /**
+   * The sentence around the first match that reads as the dealership speaking about itself, cut so
+   * the matched phrase is always inside the quote (long navigation text has no sentence boundary
+   * for hundreds of characters).
+   */
   const sentence = (re: RegExp): string | null => {
-    const m = re.exec(text);
-    if (!m) return null;
-    const start = Math.max(0, text.lastIndexOf(".", m.index) + 1);
-    const end = text.indexOf(".", m.index + m[0].length);
-    return text.slice(start, end > 0 ? end + 1 : Math.min(text.length, m.index + 160)).replace(/\s+/g, " ").trim().slice(0, 240);
+    const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+    for (let m = g.exec(text); m; m = g.exec(text)) {
+      const sentenceStart = text.lastIndexOf(".", m.index) + 1;
+      const sentenceEnd = text.indexOf(".", m.index + m[0].length);
+      const start = Math.max(sentenceStart, m.index - 110);
+      const end = Math.min(sentenceEnd > 0 ? sentenceEnd + 1 : text.length, m.index + m[0].length + 130);
+      const quote = text.slice(start, end).replace(/\s+/g, " ").trim();
+      if (CUSTOMER_VOICE.test(text.slice(sentenceStart, sentenceEnd > 0 ? sentenceEnd + 1 : m.index + m[0].length + 130))) continue;
+      return quote.slice(0, 240);
+    }
+    return null;
   };
   const corp = sentence(CORPORATE);
   if (corp) return { status: "EXCLUDED", quote: corp, reason: "the site describes corporate or publicly traded ownership", confidence: "MEDIUM" };

@@ -32,3 +32,18 @@ describe("ownership classification", () => {
     expect(researchQueueEligible("EXCLUDED")).toBe(false);
   });
 });
+
+describe("ownership evidence quality", () => {
+  it("ignores customer reviews that mention family", () => {
+    expect(classifyOwnership({ ...base, text: "Reviews. This was the second vehicle our family has purchased from Lakeside and will not be the last. 5 stars." }).status).toBe("UNVERIFIED");
+    expect(classifyOwnership({ ...base, text: "They are a great father and son team, very helpful. I bought my truck here." }).status).toBe("UNVERIFIED");
+  });
+
+  it("keeps the matched phrase inside the quote even in long navigation text", () => {
+    const nav = Array.from({ length: 40 }, (_, i) => `Menu item ${i} Inventory Financing`).join(" ");
+    const r = classifyOwnership({ ...base, text: `${nav} Family Owned And Operated For Over 40 years ${nav}` });
+    expect(r.status).toBe("FAMILY_OWNED_INDEPENDENT");
+    expect(r.quote).toMatch(/Family Owned And Operated/i);
+    expect((r.quote ?? "").length).toBeLessThanOrEqual(240);
+  });
+});
