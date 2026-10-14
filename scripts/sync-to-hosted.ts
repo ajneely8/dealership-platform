@@ -79,7 +79,16 @@ async function main() {
       console.log(`${table.padEnd(24)} ${String(rows.length).padStart(6)} row(s)${dry ? "" : " → copying"}`);
       if (dry || !dst || rows.length === 0) continue;
       const names = cols.map((c) => `"${c.name}"`).join(", ");
-      const conflict = pk.length ? ` on conflict (${pk.map((c) => `"${c}"`).join(", ")}) do nothing` : "";
+      // Research columns are refreshed on the target; columns the sales team owns on the hosted
+      // viewer (outcomes, pipeline, notes) are never overwritten. Other tables keep what is there.
+      const SALES_OWNED = new Set(["sales_status", "last_touch_at", "pipeline_stage", "next_action", "next_action_due", "priority_override", "buyer_readiness"]);
+      const upsertCols = cols.map((c) => c.name).filter((n) => !pk.includes(n) && !(table === "dealerships" && SALES_OWNED.has(n)));
+      const setList = upsertCols.map((n) => `"${n}" = excluded."${n}"`).join(", ");
+      const conflict =
+        table === "dealerships" ? ` on conflict ("id") do update set ${setList}`
+        : table === "buying_intent_scores" ? ` on conflict ("dealership_id") do update set ${setList}`
+        : table === "scores" ? ` on conflict ("dealership_id", "product") do update set ${setList}`
+        : pk.length ? ` on conflict (${pk.map((c) => `"${c}"`).join(", ")}) do nothing` : "";
       for (let i = 0; i < rows.length; i += BATCH) {
         const chunk = rows.slice(i, i + BATCH);
         const values: unknown[] = [];
