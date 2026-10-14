@@ -27,7 +27,8 @@ export default async function ResultsPage() {
              count(distinct d.id) filter (where t.outcome = 'NOT_INTERESTED')::int as lost
       from dealerships d left join sales_touches t on t.dealership_id = d.id
       where d.suppressed = false and d.buying_intent is not null
-      group by 1 order by case band when 'HIGH' then 0 when 'MEDIUM' then 1 else 2 end`),
+      group by 1
+      order by case when d.buying_intent >= 75 then 'HIGH' when d.buying_intent >= 45 then 'MEDIUM' else 'LOW' end`),
   ]);
   const rows = (raw.rows as Row[]).map((r) => ({ ...r, band: r.band as IntentBand }));
   const pct = (n: number, d: number) => (d >= 10 ? `${Math.round((n / d) * 100)}%` : d > 0 ? "too few" : "—");
