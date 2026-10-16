@@ -13,10 +13,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="grid min-h-screen md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
       <section className="hidden flex-col justify-between bg-black p-10 text-white md:flex">
         <div className="flex items-center gap-3">
-          <Image src="/sarvx-logo.png" alt="SarvX" width={44} height={44} priority className="rounded-sm" />
           <div className="leading-tight">
-            <div className="text-[16px] font-semibold">SarvX</div>
-            <div className="num text-[11px] uppercase tracking-[0.12em] text-[#c3d2e6]">Dealer Intel · Research desk</div>
+            <Image src="/sidekick-logo.png" alt="SideKick" width={220} height={110} priority className="-ml-2 h-auto w-[220px]" />
+            <div className="num mt-1 text-[11px] uppercase tracking-[0.12em] text-[#c3d2e6]">Research desk</div>
           </div>
         </div>
         <div className="max-w-md">
@@ -28,7 +27,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className="grid place-items-center px-6 py-10">
         <div className="w-full max-w-[360px]">
           <div className="mb-6 md:hidden">
-            <Image src="/sarvx-logo.png" alt="SarvX" width={40} height={40} priority className="rounded-sm" />
+            <Image src="/sidekick-logo.png" alt="SideKick" width={180} height={90} priority className="-ml-2 h-auto w-[180px]" />
           </div>
           <div className="eyebrow">Sign in</div>
           <h1 className="mt-1 text-[22px] font-semibold tracking-[-0.01em]">Research desk</h1>

@@ -81,7 +81,7 @@ export function writeSalesAngle(
         "Claims marked INFERENCE are possibilities, not facts — phrase them with 'appears' or 'may'.",
         "mainProblem: one plain sentence naming the single biggest gap the evidence shows.",
         "salesAngle: 2-3 plain sentences. Lead with the dealership's problem, then how the recommended product addresses it. No jargon, no hype.",
-        "coldCallOpener: 1-2 spoken sentences to open a cold call, curiosity-driven, no pitch, ending with who to ask for. Start with 'Hey, this is [your name] with SarvX' and keep that placeholder.",
+        "coldCallOpener: 1-2 spoken sentences to open a cold call, curiosity-driven, no pitch, ending with who to ask for. Start with 'Hey, this is [your name] with SideKick' and keep that placeholder.",
         "discoveryQuestion: one plain question that confirms whether the problem exists, aimed at the dealership's own process.",
         "citedClaimIds: the id of every claim you relied on. Every statement of fact must trace to one of these.",
       ].join("\n"),

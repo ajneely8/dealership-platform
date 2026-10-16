@@ -24,10 +24,10 @@ const TEMPLATE_ANGLE: Record<Product, (problem: string) => string> = {
 
 /** Fixed, product-specific call scripts. "[your name]" is left for the caller; the app never invents a person. */
 const OPENER: Record<Product, (dealer: string) => string> = {
-  SUMMARYBOT: (d) => `Hey, this is [your name] with SarvX. I was looking into how ${d} handles online inquiries and noticed something I wanted to ask you about. Who oversees that process?`,
-  INVENTORY_OUTREACH: (d) => `Hey, this is [your name] with SarvX. I was looking at how ${d} lets past customers know when the right vehicle comes in, and had a quick question. Who handles that?`,
-  SERVICE_BOT: (d) => `Hey, this is [your name] with SarvX. I was looking at how customers book service with ${d} and noticed something worth a quick question. Who runs the service drive?`,
-  SOCIAL_AUTOMATION: (d) => `Hey, this is [your name] with SarvX. I was looking at ${d}'s social pages and the questions people leave there. Who handles those replies?`,
+  SUMMARYBOT: (d) => `Hey, this is [your name] with SideKick. I was looking into how ${d} handles online inquiries and noticed something I wanted to ask you about. Who oversees that process?`,
+  INVENTORY_OUTREACH: (d) => `Hey, this is [your name] with SideKick. I was looking at how ${d} lets past customers know when the right vehicle comes in, and had a quick question. Who handles that?`,
+  SERVICE_BOT: (d) => `Hey, this is [your name] with SideKick. I was looking at how customers book service with ${d} and noticed something worth a quick question. Who runs the service drive?`,
+  SOCIAL_AUTOMATION: (d) => `Hey, this is [your name] with SideKick. I was looking at ${d}'s social pages and the questions people leave there. Who handles those replies?`,
 };
 const DISCOVERY: Record<Product, string> = {
   SUMMARYBOT: "When someone submits a vehicle inquiry after hours, how does your team make sure it gets followed up on?",

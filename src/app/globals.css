@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * SarvX command-center theme. Near-black chrome and deep navy surfaces; one accent per agent
+ * SideKick command-center theme. Near-black chrome and deep navy surfaces; one accent per agent
  * (set from data, never decoration). Evidence provenance stays typographic (OBS / INF).
  * Animation is limited to live-status indicators and respects reduced-motion preferences.
  */

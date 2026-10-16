@@ -1,4 +1,4 @@
-# SarvX AI Intelligence Command Center (Dealer Intel)
+# SideKick AI Intelligence Command Center (Dealer Intel)
 
 A dealership research and sales-intelligence platform run by nine named agents. It researches automotive dealerships and groups, finds evidence of gaps in lead follow-up, inventory outreach, service scheduling and social response, scores each account with explainable rules, and hands sales a prioritised list with the evidence attached.
 

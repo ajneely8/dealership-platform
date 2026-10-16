@@ -501,7 +501,7 @@ async function Findings({ agent }: { agent: (typeof AGENTS)[AgentKey] }) {
     return (
       <Panel title="Orchestration">
         <p className="px-4 py-3 text-[13px] text-muted">
-          SarvX&apos;s findings are the state of the queues. See <A href="/active">Active research</A> for what is running, queued and parked, and <A href="/agents?view=table">the agent table</A> for 7-day throughput per queue.
+          SideKick&apos;s findings are the state of the queues. See <A href="/active">Active research</A> for what is running, queued and parked, and <A href="/agents?view=table">the agent table</A> for 7-day throughput per queue.
         </p>
       </Panel>
     );

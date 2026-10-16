@@ -1,5 +1,5 @@
 /**
- * Who owns the dealership, and whether it is a target at all. SarvX sells to family-owned and
+ * Who owns the dealership, and whether it is a target at all. SideKick sells to family-owned and
  * privately owned independent dealerships; manufacturer franchise stores, national chains and
  * corporate or publicly traded groups are excluded no matter how well they score.
  *

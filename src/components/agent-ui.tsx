@@ -6,10 +6,10 @@ import { AGENT_STATUS_LABEL, type AgentDef, type AgentStatus } from "@/domain/ag
 /**
  * Synthetic faces. Each agent is a faceted visor drawn in code, in its own colour, with its own
  * geometry (helmet width, visor tilt, eye shape, antenna, traces), so the nine read as nine
- * different intelligences rather than one template. SarvX, the orchestrator, wears the logo.
+ * different intelligences rather than one template. SideKick, the orchestrator, wears the logo.
  * While an agent works, its visor pulses; at rest it dims.
  */
-const LOGO = "/sarvx-logo.png";
+const LOGO = "/sidekick-mark.png";
 
 type FaceGeom = { crown: number; jaw: number; visorY: number; tilt: number; eye: "slit" | "wide" | "arc" | "dot"; antenna: boolean; traces: number; chin: boolean };
 const GEOM: Record<string, FaceGeom> = {

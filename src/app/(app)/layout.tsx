@@ -16,10 +16,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen md:grid md:grid-cols-[216px_1fr]">
       <aside className="bg-black text-white md:sticky md:top-0 md:h-screen md:overflow-y-auto">
         <div className="flex items-center gap-3 border-b border-line px-4 py-4">
-          <Image src="/sarvx-logo.png" alt="SarvX" width={34} height={34} priority className="rounded-sm" />
           <div className="leading-tight">
-            <div className="text-[14px] font-semibold tracking-[-0.01em]">SarvX</div>
-            <div className="num text-[10.5px] uppercase tracking-[0.12em] text-[#c3d2e6]">Intelligence Command Center</div>
+            <Image src="/sidekick-logo.png" alt="SideKick" width={168} height={84} priority className="-ml-1 h-auto w-[168px]" />
+            <div className="num mt-1 text-[10.5px] uppercase tracking-[0.12em] text-[#c3d2e6]">Intelligence Command Center</div>
           </div>
         </div>
         <Nav pending={pending?.n ?? 0} />

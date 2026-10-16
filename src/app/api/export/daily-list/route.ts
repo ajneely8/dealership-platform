@@ -107,6 +107,6 @@ export async function GET() {
   }
   const today = new Date().toISOString().slice(0, 10);
   return new Response(`﻿${lines.join("\r\n")}\r\n`, {
-    headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="sarvx-daily-list-${today}.csv"`, "cache-control": "no-store" },
+    headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="sidekick-daily-list-${today}.csv"`, "cache-control": "no-store" },
   });
 }

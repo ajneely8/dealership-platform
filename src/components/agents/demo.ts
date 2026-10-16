@@ -16,7 +16,7 @@ type Step = { t: number; agent: AgentKey; kind: FeedEvent["kind"]; step: string;
 // Timings in seconds from the start of the loop. Based on the real event sequence a research
 // pass produces, compressed to about two minutes.
 const SCRIPT: Step[] = [
-  { t: 1, agent: "orion", kind: "task.created", step: "website-scan requested by demo@sarvx", status: "INFO" },
+  { t: 1, agent: "orion", kind: "task.created", step: "website-scan requested by demo@sidekick", status: "INFO" },
   { t: 2, agent: "nova", kind: "task.started", step: "website-scan started", detail: "requested by an operator" },
   { t: 4, agent: "nova", kind: "task.step.completed", step: "Opened the homepage", detail: "https://example-motors.demo/" },
   { t: 6, agent: "nova", kind: "evidence.saved", step: "Screenshot captured: homepage", status: "DONE", evidence: true },
@@ -44,7 +44,7 @@ const SCRIPT: Step[] = [
   { t: 48, agent: "blaze", kind: "task.step.completed", step: "Writing brief: 5 evidence claim(s), recommended summarybot" },
   { t: 51, agent: "blaze", kind: "finding.created", step: "Brief ready (template angle)", detail: "No chat or instant reply on the website; a contact form is the only way in", status: "DONE" },
   { t: 52, agent: "blaze", kind: "task.completed", step: "sales-intel finished in 6s", status: "DONE" },
-  { t: 55, agent: "orion", kind: "task.created", step: "Form test approved and handed to Charlie", detail: "by demo@sarvx", status: "DONE" },
+  { t: 55, agent: "orion", kind: "task.created", step: "Form test approved and handed to Charlie", detail: "by demo@sidekick", status: "DONE" },
   { t: 57, agent: "charlie", kind: "task.started", step: "interaction started", detail: "requested by an operator" },
   { t: 59, agent: "charlie", kind: "task.step.completed", step: "Opening the form page", detail: "https://example-motors.demo/contact" },
   { t: 62, agent: "charlie", kind: "task.step.completed", step: "Filled the contact form with the test identity", detail: "4 field(s)" },
@@ -156,7 +156,7 @@ export function demoSceneData(key: AgentKey): SceneData {
     case "blaze":
       return {
         kind: "blaze",
-        brief: { dealershipName: DEMO_DEALER.name, priority: 61, product: "SUMMARYBOT", mainProblem: "No chat or instant reply on the website; a contact form is the only way in", salesAngle: "Leads that land on the site after hours have nowhere to go but a form. An instant reply would catch them while they are still shopping.", opener: "Hi, this is [your name] with SarvX. I was on your website last night looking at a truck and noticed there was no way to get a quick answer — is that something your team has been thinking about?", question: "When a lead comes in through the website at 9 pm, who sees it first, and when?", nextAction: "Call the Internet Sales Manager", claims: [{ text: "No chat widget on the website", kind: "OBSERVED" }, { text: "1 lead form (contact)", kind: "OBSERVED" }, { text: "Hiring an Internet Sales Manager and a BDC Representative", kind: "OBSERVED" }, { text: "3 unanswered pricing questions on Instagram", kind: "OBSERVED" }, { text: "After-hours leads likely wait until morning", kind: "INFERENCE" }], generatedAt: now },
+        brief: { dealershipName: DEMO_DEALER.name, priority: 61, product: "SUMMARYBOT", mainProblem: "No chat or instant reply on the website; a contact form is the only way in", salesAngle: "Leads that land on the site after hours have nowhere to go but a form. An instant reply would catch them while they are still shopping.", opener: "Hi, this is [your name] with SideKick. I was on your website last night looking at a truck and noticed there was no way to get a quick answer — is that something your team has been thinking about?", question: "When a lead comes in through the website at 9 pm, who sees it first, and when?", nextAction: "Call the Internet Sales Manager", claims: [{ text: "No chat widget on the website", kind: "OBSERVED" }, { text: "1 lead form (contact)", kind: "OBSERVED" }, { text: "Hiring an Internet Sales Manager and a BDC Representative", kind: "OBSERVED" }, { text: "3 unanswered pricing questions on Instagram", kind: "OBSERVED" }, { text: "After-hours leads likely wait until morning", kind: "INFERENCE" }], generatedAt: now },
       };
     case "orion":
       return { kind: "orion", queues: [], window: { open: true, label: "Demo: research hours open" } };

@@ -145,7 +145,7 @@ export const AGENTS: Record<AgentKey, AgentDef> = {
   orion: {
     key: "orion",
     number: "07",
-    name: "SarvX",
+    name: "SideKick",
     role: "Master Orchestrator Agent",
     color: "#7dd3fc",
     purpose: "Coordinate the workforce: schedule research, keep it inside the research window, and keep queues healthy.",
